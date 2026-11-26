@@ -72,7 +72,7 @@ export default function Jobs({ arg }) {
 // the steps follow the real work: the agent's writing is the long one (about a minute), so it says so and counts up
 const clock = s => { s = Math.max(0, Math.round(s)); return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s` }
 
-// Live progress of a resume build: the step it is really on, and time left from how long each step takes on this computer.
+// Live progress of a CV build: the step it is really on, and time left from how long each step takes on this computer.
 // Polled twice a second; between polls the countdown runs locally so it moves smoothly.
 function BuildProgress({ p, since }) {
   const [now, setNow] = useState(Date.now())
@@ -84,7 +84,7 @@ function BuildProgress({ p, since }) {
   return (
     <div className="mt-5">
       <div className="flex items-baseline justify-between text-[13px]">
-        <span className="font-medium text-ink">{p ? 'Building your resume' : 'Starting…'}</span>
+        <span className="font-medium text-ink">{p ? 'Building your CV' : 'Starting…'}</span>
         <span className="tabular-nums text-muted">{p ? `${p.slow ? 'Taking longer than usual · ' : ''}${clock(elapsed)} elapsed · about ${clock(left)} left` : ''}</span>
       </div>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-mist">
@@ -148,7 +148,7 @@ function JobSheet({ id, onClose, onChange }) {
   buildingRef.current = building
   const [prog, setProg] = useState(null)   // [progress, when it was read]
   const [res, setRes] = useState(null)
-  // a new preview only when a new resume is built (a fresh Date.now() on every render reloaded it on each keystroke)
+  // a new preview only when a new CV is built (a fresh Date.now() on every render reloaded it on each keystroke)
   const stamp = useMemo(() => Date.now(), [res])
   useEffect(() => {   // a build already running (Autopilot started it when it claimed this job) shows its progress too
     if (!id) return
@@ -171,7 +171,7 @@ function JobSheet({ id, onClose, onChange }) {
     // the wait. A link to a job that's gone says so instead of loading forever.
     api('/api/jobs/' + id).then(j => { setJob(j || false); return j && api(`/api/jobs/${id}/ats`) }).then(r => r && setRep(r))
       .catch(() => setJob(j => j || false))
-    api(`/api/jobs/${id}/resume`).then(r => r.result && setRes(prev => prev || r.result)).catch(() => {})   // the resume built last time
+    api(`/api/jobs/${id}/resume`).then(r => r.result && setRes(prev => prev || r.result)).catch(() => {})   // the CV built last time
   }, [id])
   const [ask, setAsk] = useState('')   // "lead with my robotics project": a change to this job's resume, in plain words
   const tailor = async (request) => {
@@ -231,13 +231,13 @@ function JobSheet({ id, onClose, onChange }) {
                     <div className="mt-0.5 text-[13px] text-muted">{rep?.terms || 0} skills in the posting. Tailoring surfaces the ones you have.</div>
                     {hard.length > 0 && <div className="mt-3"><div className="mb-1.5 text-[12px] text-muted">You have</div><div className="flex flex-wrap gap-1.5">
                       {hard.slice(0, 14).map(m => <Badge key={m.term} className="text-ink"><Check className="size-3 text-good" />{m.term}</Badge>)}</div></div>}
-                    {miss.length > 0 && <div className="mt-3"><div className="mb-1.5 text-[12px] text-muted">Not on your resume yet</div><div className="flex flex-wrap gap-1.5">
+                    {miss.length > 0 && <div className="mt-3"><div className="mb-1.5 text-[12px] text-muted">Not on your CV yet</div><div className="flex flex-wrap gap-1.5">
                       {miss.slice(0, 8).map(m => <Badge key={m.term}>{m.term}</Badge>)}</div></div>}</div>
                 </div>
 
                 <div className="card mt-3 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0"><div className="text-[15px] font-semibold leading-tight text-ink">Your resume for this job</div>
+                    <div className="min-w-0"><div className="text-[15px] font-semibold leading-tight text-ink">Your CV for this job</div>
                       <div className="mt-0.5 text-[13px] text-muted">Written for this posting from your vault. Numbers, titles and employers are checked.</div></div>
                     <div className="flex flex-wrap items-center gap-2">
                       <select value={tpl} onChange={e => setTpl(e.target.value)} disabled={building} className="h-10 max-w-full rounded-[10px] bg-white/[.06] px-3 text-[13.5px] text-ink outline-none focus:ring-2 focus:ring-signal disabled:opacity-50">
@@ -309,7 +309,7 @@ function AddJob({ open, setOpen }) {
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-32px)] w-[min(520px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[14px] bg-[#1c1c1e] p-6 shadow-[0_40px_100px_rgb(0_0_0/.5)] outline-none ring-1 ring-white/10">
           <Dialog.Title className="text-[20px] font-semibold tracking-[-0.01em] text-ink">Add a job</Dialog.Title>
-          <p className="mb-5 mt-1 text-[14px] text-muted">Paste the link. Pasting the description too makes the resume sharper.</p>
+          <p className="mb-5 mt-1 text-[14px] text-muted">Paste the link. Pasting the description too makes the CV sharper.</p>
           <div className="space-y-4">
             {[['url', 'Job link', 'https://…'], ['title', 'Title', 'Software Engineer Intern'], ['company', 'Company', 'Acme']].map(([k, l, ph]) => (
               <label key={k} className="block"><div className="label mb-1.5">{l}</div><input className="box" placeholder={ph} value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })}

@@ -130,11 +130,11 @@ function Talk({ job, onDone }) {
   )
 }
 
-/* A reply that names a resume file shows a link to open it, never a raw path cut off at the edge of the bubble. */
+/* A reply that names a CV file shows a link to open it, never a raw path cut off at the edge of the bubble. */
 function Linked({ text }) {
   // a user folder can have a space in it ("C:\Users\John Smith\..." / "/Users/John Smith/..."): match from the drive or home
   const parts = (text || '').split(/((?:[A-Za-z]:\\[^\n"'<>|?*]*?\.applytwin\\resumes\\[^\n"'<>|?*]+?\.pdf)|(?:(?:~|\/(?:Users|home)\/)[^\n"'<>|?*\\]*?\.applytwin\/resumes\/[^\n"'<>|?*\\]+?\.pdf)|(?:\S*\.applytwin[\\/]resumes[\\/]\S+?\.pdf))/)
   return parts.map((p, i) => i % 2
-    ? <a key={i} href={`/file?path=${encodeURIComponent(p)}`} target="_blank" rel="noreferrer" className="font-medium underline">Open the resume</a>
+    ? <a key={i} href={`/file?path=${encodeURIComponent(p)}`} target="_blank" rel="noreferrer" className="font-medium underline">Open the CV</a>
     : <span key={i}>{p}</span>)
 }

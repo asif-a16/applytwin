@@ -16,9 +16,23 @@ export function useQuestions() {
   return qs
 }
 
-export const getv = (p, k) => k.startsWith('eeo.') ? (p.eeo || {})[k.slice(4)] : p[k]
-export const setv = (p, k, v) => k.startsWith('eeo.') ? { ...p, eeo: { ...(p.eeo || {}), [k.slice(4)]: v } } : { ...p, [k]: v }
-export const missing = (qs, p) => (qs || []).filter(q => !q.optional && [undefined, null, ''].includes(getv(p, q.key)))
+// nested keys: 'eeo.gender', 'work_auth.GB'
+const split = k => { const i = k.indexOf('.'); return i < 0 ? [k] : [k.slice(0, i), k.slice(i + 1)] }
+export const getv = (p, k) => { const [a, b] = split(k); return b === undefined ? p[a] : (p[a] || {})[b] }
+export const setv = (p, k, v) => { const [a, b] = split(k); return b === undefined ? { ...p, [a]: v } : { ...p, [a]: { ...(p[a] || {}), [b]: v } } }
+// a select's options are plain strings, or {value, label} when the stored value is a code ('sponsorship')
+const ov = o => typeof o === 'string' ? o : o.value
+const ol = o => typeof o === 'string' ? o : o.label
+const voluntary = g => g.startsWith('Voluntary') || g.startsWith('Equality')
+// q.when 'GB' / 'US': needed only by users applying there (answers.WHEN). No countries picked = the US-first setup.
+const PLACES = { GB: ['united kingdom', 'uk', 'gb', 'great britain', 'britain', 'england', 'scotland', 'wales', 'northern ireland', 'europe', 'emea'],
+  US: ['united states', 'us', 'usa', 'u.s.', 'united states of america', 'america', 'north america', 'americas'] }
+export const applies = (q, p) => {
+  if (!q.when) return true
+  const cs = (p.search?.countries || []).map(c => (c || '').trim().toLowerCase())
+  return cs.some(c => PLACES[q.when].includes(c)) || (q.when === 'US' && cs.length === 0)
+}
+export const missing = (qs, p) => (qs || []).filter(q => !q.optional && applies(q, p) && [undefined, null, ''].includes(getv(p, q.key)))
 
 // one answer that settles others: a U.S. citizen or green card holder is authorized to work and needs no sponsorship
 function implied(p, key) {
@@ -32,7 +46,7 @@ function implied(p, key) {
 }
 
 export function ProfileQuestions({ qs, p, setP, groups, showMissing, filled = [], large }) {
-  // "filled in for you" belongs to the value the resume gave: once you change it, it's yours and the label goes
+  // "filled in for you" belongs to the value the CV gave: once you change it, it's yours and the label goes
   const first = useRef({})
   const firstSeen = (k, v) => (k in first.current ? first.current[k] : (first.current[k] = v))
   if (!qs) return <div className="skel h-64" />
@@ -41,21 +55,22 @@ export function ProfileQuestions({ qs, p, setP, groups, showMissing, filled = []
     <div className="space-y-7">
       {names.map(g => (
         <section key={g}>
-          {!large && <div className="mb-1.5 px-4 text-[13px] font-medium text-muted">{g}{g.startsWith('Voluntary') && ' · you can decline any of these'}</div>}
-          {g.startsWith('Voluntary') && qs.some(q => q.group === g && q.kind === 'select' && [undefined, null, ''].includes(getv(p, q.key))) &&
+          {!large && <div className="mb-1.5 px-4 text-[13px] font-medium text-muted">{g}{voluntary(g) && ' · you can decline any of these'}{g.startsWith('US ') && ' · needed only if you apply to US jobs'}</div>}
+          {voluntary(g) && qs.some(q => q.group === g && q.kind === 'select' && [undefined, null, ''].includes(getv(p, q.key))) &&
             <div className="mb-2 flex justify-end"><button onClick={() => setP(qs.filter(q => q.group === g && q.kind === 'select').reduce((acc, q) => {
-              const d = (q.options || []).find(o => /decline|do not want|prefer not/i.test(o))
+              const d = (q.options || []).map(ov).find(o => /decline|do not want|prefer not/i.test(o))
               return d && [undefined, null, ''].includes(getv(acc, q.key)) ? setv(acc, q.key, d) : acc
             }, p))} className="text-[13px] font-medium text-signal-ink hover:underline">Decline all of these</button></div>}
           <div className="card divide-y divide-white/[.06] overflow-hidden">
             {qs.filter(q => q.group === g).map(q => {
               const v = getv(p, q.key)
               const blank = [undefined, null, ''].includes(v)
+              const optional = q.optional || !applies(q, p)
               return (
                 <div key={q.key} className={'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6 ' + (large ? 'px-5 py-3' : 'min-h-[52px] px-4 py-2.5')}>
                   <div className={'flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-white ' + (large ? 'text-[15px]' : 'text-[14.5px]')}>
-                    <span>{q.label}</span>{q.optional && <span className="text-[12px] text-faint">optional</span>}
-                    {showMissing && blank && !q.optional && <span className="text-[12px] text-warn">Needed</span>}
+                    <span>{q.label}</span>{optional && <span className="text-[12px] text-faint">optional</span>}
+                    {showMissing && blank && !optional && <span className="text-[12px] text-warn">Needed</span>}
                     {filled.includes(q.key) && !blank && v === firstSeen(q.key, v) && <span className="text-[12px] text-faint">filled in for you</span>}
                   </div>
                   <div className="w-full shrink-0 sm:w-[46%]">
@@ -64,7 +79,7 @@ export function ProfileQuestions({ qs, p, setP, groups, showMissing, filled = []
                         <select value={v || ''} onChange={e => setP(implied(setv(p, q.key, e.target.value), q.key))}
                           className={'h-9 w-full rounded-[10px] bg-white/[.06] px-3 text-[14px] outline-none focus:ring-2 focus:ring-signal ' + (v ? 'text-white' : 'text-faint')}>
                           <option value="" disabled>Choose…</option>
-                          {(v && !q.options.includes(v) ? [v, ...q.options] : q.options).map(o => <option key={o} value={o}>{o}</option>)}
+                          {(v && !q.options.map(ov).includes(v) ? [v, ...q.options] : q.options).map(o => <option key={ov(o)} value={ov(o)}>{ol(o)}</option>)}
                         </select>)
                       : <input value={v || ''} placeholder={q.hint || ''} onChange={e => setP(setv(p, q.key, e.target.value))}
                           className="h-9 w-full rounded-[10px] bg-white/[.06] px-3 text-[14px] text-white outline-none placeholder:text-faint focus:ring-2 focus:ring-signal" />}

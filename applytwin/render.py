@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from .regions import gpa_label
 
 
 def degree_line(e):
@@ -224,7 +225,7 @@ def _page(r, style, titles=None):
                 deg = degree_line(e)
                 # the GPA never wraps apart ("GPA:" at a line end, "3.89/4.00" on the next reads as a broken line): when the
                 # degree line is too long to hold it beside the dates, it opens the honors line instead
-                gpa = e.get('gpa') and '<span class="nb">' + html.escape(e.get('gpa_label') or 'GPA') + ': ' + html.escape(str(e['gpa'])) + '</span>'
+                gpa = e.get('gpa') and '<span class="nb">' + html.escape(gpa_label(e)) + ': ' + html.escape(str(e['gpa'])) + '</span>'
                 minor = e.get('minor') and 'Minor in ' + e['minor']
                 long_line = bool(gpa) and len(deg) + len(minor or '') + len(str(e['gpa'])) + 9 > 84
                 extra = '; '.join(x for x in (minor and html.escape(minor), not long_line and gpa) if x)
@@ -438,7 +439,7 @@ A4_PX = 1122     # 297mm
 
 def _css(style, r):
     from .regions import paper_css
-    return STYLE_CSS[style] + paper_css((r or {}).get('paper'))   # A4 outside the US and Canada; Letter otherwise
+    return STYLE_CSS[style] + paper_css((r or {}).get('paper'))   # A4 by default; Letter only for US and Canadian jobs
 
 # Runs inside Chrome over every candidate page (the resume after 0, 1, 2... trims). Policy, in order: the fewest cut lines
 # whose page fits with the type shrunk at most to the tier's floor; then the largest type (up to kmax) that still fits; then
@@ -472,7 +473,8 @@ def _fit_measured(r, style, out_pdf, worth=None, kmax=1.04, smax=1.5):
         dropped.append(v)
         states.append((copy.deepcopy(cur), list(dropped)))
     n = len(states)
-    cfg = {"limit": (A4_PX if str(r.get('paper') or '').upper() == 'A4' else PAGE_PX) - 2, "kmax": kmax, "smax": smax, "tiers": [[0, 12, .95], [13, 24, .92], [25, max(25, n - 1), .9]]}
+    from .regions import a4
+    cfg = {"limit": (A4_PX if a4(r.get('paper')) else PAGE_PX) - 2, "kmax": kmax, "smax": smax, "tiers": [[0, 12, .95], [13, 24, .92], [25, max(25, n - 1), .9]]}
     pages = ''.join(f'<div class="m" style="display:none">{_page(s, style)}</div>' for s, _ in states)
     doc = _doc(_css(style, r), pages + '<pre id="fit"></pre><script>' + (_FIT_JS % json.dumps(cfg)) + '</script>',
                extra='<style>.m .page{min-height:0}#fit{display:none}</style>')

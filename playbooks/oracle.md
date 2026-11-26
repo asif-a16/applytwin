@@ -10,7 +10,7 @@
   value-setting or a pasted value shows no suggestions and the field stays invalid. Click the field, type the first
   few letters with your browser tool's real typing action (not a script), wait for the list, click the matching
   suggestion, then read the field back.
-- Upload the resume first: Oracle parses it into experience and education rows. Then check every parsed row against
+- Upload the CV first: Oracle parses it into experience and education rows. Then check every parsed row against
   the vault and delete bogus ones (a "school" made of award names, duplicated jobs).
 - Dropdowns are listboxes: click, pick by exact text, read the shown value back.
 - Questions are spread over several pages; "Next" with an invalid field just scrolls to it. Read the red message.

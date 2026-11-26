@@ -304,7 +304,7 @@ def doctor():
         add('codex_approve', 'default_tools_approval_mode' in ctxt, 'Codex can run ApplyTwin unattended', '', 'Restart ApplyTwin: it connects them when it starts (or run: applytwin install-agents)', optional=True)
     p = store.profile()
     vault = store.resume()
-    add('resume', bool(vault.get('experience') or vault.get('projects')), 'Resume imported', '', 'Drop your resume on the Welcome page')
+    add('resume', bool(vault.get('experience') or vault.get('projects')), 'Resume imported', '', 'Drop your CV on the Welcome page')
     from . import answers as ans
     miss = ans.gaps(p)
     add('profile', not miss, 'Application answers complete',

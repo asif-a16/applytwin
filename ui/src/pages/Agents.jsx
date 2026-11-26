@@ -13,7 +13,7 @@ import { AgentConnect } from '../components/AgentConnect'
 
 const clock = s => { s = Math.max(0, Math.round(s)); return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s` }
 
-// The resume for the current job, written while the twin fills the form: its real step and time left.
+// The CV for the current job, written while the twin fills the form: its real step and time left.
 function ResumeLine({ p }) {
   const [seen, setSeen] = useState(Date.now())
   const [now, setNow] = useState(Date.now())
@@ -21,7 +21,7 @@ function ResumeLine({ p }) {
   useEffect(() => setSeen(Date.now()), [p])
   const drift = Math.min(3, (now - seen) / 1000)   // between status polls, keep the countdown moving
   const left = Math.max(1, p.eta - drift), elapsed = p.elapsed + drift
-  const label = (p.steps || []).find(s => s.state === 'now')?.label || 'Writing your resume'
+  const label = (p.steps || []).find(s => s.state === 'now')?.label || 'Writing your CV'
   return (
     <div className="mt-3 max-w-[460px]">
       <div className="flex items-baseline justify-between gap-3 text-[13px]">
@@ -34,7 +34,7 @@ function ResumeLine({ p }) {
     </div>)
 }
 
-/* The resume for the job your twin is on: while it's being written, a page that fills in line by line; once it's done,
+/* The CV for the job your twin is on: while it's being written, a page that fills in line by line; once it's done,
    the real page, small, so you see exactly what's being sent. */
 const SKEL = [[.42, 1], [.7, .5], [0], [.3, .9], [.95], [.9], [.6], [0], [.3, .9], [.92], [.85], [.95], [.5], [0], [.3, .9], [.9], [.8], [0], [.25, .9], [.9], [.7]]
 function WritingPage({ p, W, S }) {
@@ -51,7 +51,7 @@ function WritingPage({ p, W, S }) {
     </div>)
 }
 
-// The few seconds after a resume is written: type a change and it's rebuilt, or do nothing and your twin sends it.
+// The few seconds after a CV is written: type a change and it's rebuilt, or do nothing and your twin sends it.
 function ReviewBox({ jobId, left, rebuilding }) {
   const end = useRef(Date.now() + left * 1000), total = useRef(Math.max(1, left)), held = useRef(false)
   const [now, setNow] = useState(Date.now())
@@ -63,7 +63,7 @@ function ReviewBox({ jobId, left, rebuilding }) {
   const send = async body => {
     setSent(body.request ? 'change' : 'go')
     const r = await api(`/api/jobs/${encodeURIComponent(jobId)}/review`, body).catch(() => null)
-    if (r && !r.ok) { toast(r.note || 'That resume already went out.'); setSent('late') }
+    if (r && !r.ok) { toast(r.note || 'That CV already went out.'); setSent('late') }
   }
   if (rebuilding || sent === 'change') return <p className="mt-3 text-[13px] text-white/80">Rebuilding with your change. Your twin sends the new one when it's ready.</p>
   if (sent === 'go' || sent === 'late' || secs === 0) return null
@@ -92,16 +92,16 @@ function ReviewBox({ jobId, left, rebuilding }) {
 function ResumePreview({ r, p, company, title, jobId }) {
   const src = r ? `/file?path=${encodeURIComponent(r.pdf)}` : null
   const W = 612, H = 792, S = 0.3
-  const step = (p?.steps || []).find(x => x.state === 'now')?.label || 'Writing your resume'
+  const step = (p?.steps || []).find(x => x.state === 'now')?.label || 'Writing your CV'
   return (
     <motion.section layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }} className="card mt-4 flex items-center gap-6 p-5 sm:p-6">
-      <a href={src || undefined} target="_blank" rel="noreferrer" aria-label={src ? 'Open this resume full size' : 'Resume being written'}
+      <a href={src || undefined} target="_blank" rel="noreferrer" aria-label={src ? 'Open this CV full size' : 'CV being written'}
         className={`group relative shrink-0 overflow-hidden rounded-[6px] bg-white shadow-[0_8px_30px_rgba(0,0,0,.45)] ring-1 ring-white/10 transition-transform ${src ? 'hover:-translate-y-0.5' : 'pointer-events-none'}`}
         style={{ width: W * S, height: H * S }}>
         <AnimatePresence initial={false}>
           {src ? <motion.div key="pdf" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-            <iframe title="Resume preview" src={`${src}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`} tabIndex={-1}
+            <iframe title="CV preview" src={`${src}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`} tabIndex={-1}
               className="pointer-events-none origin-top-left border-0" style={{ width: W, height: H, transform: `scale(${S})` }} />
             <motion.div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-transparent via-white/40 to-transparent"
               initial={{ y: '-100%' }} animate={{ y: '100%' }} transition={{ duration: 1.1, ease: 'easeInOut' }} />
@@ -109,7 +109,7 @@ function ResumePreview({ r, p, company, title, jobId }) {
         </AnimatePresence>
       </a>
       <div className="min-w-0">
-        <div className="text-[13px] font-medium text-muted">{r ? 'Resume written for this job' : `Writing a resume for this job · ${step}`}</div>
+        <div className="text-[13px] font-medium text-muted">{r ? 'CV written for this job' : `Writing a CV for this job · ${step}`}</div>
         <div className="mt-1 truncate text-[19px] font-semibold tracking-[-0.01em] text-white">{company.replace(/^\W+/, '')}</div>
         <div className="truncate text-[14px] text-muted">{title}</div>
         {r ? <>

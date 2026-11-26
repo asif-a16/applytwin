@@ -85,7 +85,7 @@ export default function Board() {
                         <div className="truncate text-[12px] text-muted">{a.title}</div></div></div>
                     <div className="mt-2 flex items-center justify-between text-[12px] text-faint">
                       <span>{new Date(a.at * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                      {a.resume_path && <a href={fileUrl(a.resume_path)} target="_blank" rel="noreferrer" draggable={false} className="font-medium text-signal-ink hover:underline">Resume</a>}</div>
+                      {a.resume_path && <a href={fileUrl(a.resume_path)} target="_blank" rel="noreferrer" draggable={false} className="font-medium text-signal-ink hover:underline">CV</a>}</div>
                   </motion.div>))}</AnimatePresence>
                 {xs.length > 40 && <div className="px-2 py-2 text-center text-[12.5px] text-faint">{(xs.length - 40).toLocaleString()} more</div>}
                 {!apps && [0, 1].map(i => <div key={i} className="skel h-[76px]" />)}

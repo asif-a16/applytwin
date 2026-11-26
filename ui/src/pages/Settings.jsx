@@ -82,19 +82,19 @@ export default function Settings() {
           <div className="-mx-1"><Accounts defaultEmail={p.email || ''} /></div>
           <Row label="Desktop notifications" hint="Notify me on this computer when my twin needs me."><div className="flex justify-end"><Switch checked={a.notify_desktop !== false} onChange={v => sa('notify_desktop', v)} /></div></Row>
           <Row label="Applies with" hint="The agent Autopilot uses."><div className="flex justify-end"><Segmented id="agentset" value={a.agent || 'claude'} onChange={v => sa('agent', v)} options={[['claude', 'Claude Code'], ['codex', 'Codex']]} /></div></Row>
-          <Row label="Tailor a resume for every job" hint="A new one-page resume, rewritten for each posting."><div className="flex justify-end"><Switch checked={a.tailor_every_resume} onChange={v => sa('tailor_every_resume', v)} /></div></Row>
+          <Row label="Tailor a CV for every job" hint="A new one-page CV, rewritten for each posting."><div className="flex justify-end"><Switch checked={a.tailor_every_resume} onChange={v => sa('tailor_every_resume', v)} /></div></Row>
           <Row wide label={`Up to ${a.daily_limit} applications a day`}><Slider value={a.daily_limit} min={5} max={200} step={5} onChange={v => sa('daily_limit', v)} /></Row>
           <Row wide label={`Skip an application stuck for ${a.stuck_minutes || 20} minutes`} hint="Waiting on a sign-in or a page that won't load: it moves on and leaves that one in Needs you."><Slider value={a.stuck_minutes || 20} min={5} max={60} step={5} onChange={v => sa('stuck_minutes', v)} /></Row>
           <Row wide label={`At most ${a.per_company_cap} per company`} hint="Many companies cap or flag repeat applicants."><Slider value={a.per_company_cap} min={1} max={10} step={1} onChange={v => sa('per_company_cap', v)} /></Row>
         </Group>
         <Group title="What you're looking for">
-          <Row label="Type"><div className="flex justify-end"><Segmented id="kind" value={s.kind} onChange={v => ss('kind', v)} options={[['internship', 'Internship'], ['new-grad', 'New grad'], ['full-time', 'Full-time']]} /></div></Row>
+          <Row label="Type"><div className="flex justify-end"><Segmented id="kind" value={s.kind} onChange={v => ss('kind', v)} options={[['internship', 'Internship'], ['co-op', 'Placement'], ['new-grad', 'Graduate'], ['full-time', 'Full-time']]} /></div></Row>
           <Row wide label="Cycle">{<input className="uline" value={s.season} onChange={e => ss('season', e.target.value)} placeholder="Summer 2027" />}</Row>
           <Row label="Roles" stack><Chips value={s.roles} onChange={v => ss('roles', v)} placeholder="Add a role" suggestions={ROLE_SUGGEST.slice(0, 10)} /></Row>
-          <Row label="Dream companies" hint="Applied to first, every time they post." stack><Chips value={s.companies_priority} onChange={v => ss('companies_priority', v)} placeholder="e.g. Google, Jane Street, Mayo Clinic" /></Row>
+          <Row label="Dream companies" hint="Applied to first, every time they post." stack><Chips value={s.companies_priority} onChange={v => ss('companies_priority', v)} placeholder="e.g. Google DeepMind, Jane Street, Arm" /></Row>
           <Row label="Never apply to" stack><Chips value={s.companies_skip} onChange={v => ss('companies_skip', v)} placeholder="Companies to skip" /></Row>
-          <Row label="Locations" stack><Chips value={s.locations} onChange={v => ss('locations', v)} placeholder="United States, Remote, New York…" suggestions={['United States', 'Remote', 'New York', 'San Francisco', 'Seattle', 'Boston']} /></Row>
-          <Row label="Working outside the US" hint="Europe, India and more: countries, cities, your right to work in each, and local program types." stack>
+          <Row label="Locations" stack><Chips value={s.locations} onChange={v => ss('locations', v)} placeholder="London, Remote, Manchester…" suggestions={['London', 'Remote', 'Manchester', 'Edinburgh', 'Cambridge', 'Bristol']} /></Row>
+          <Row label="Countries and cities" hint="The UK by default. Add Europe, the US, India and more: cities, your right to work in each, and programme types." stack>
             <WhereAbroad p={p} setP={setP} /></Row>
           <Row label="Skip titles with" stack><Chips value={s.exclude} onChange={v => ss('exclude', v)} placeholder="senior, phd…" /></Row>
           <Row wide label={`Show jobs with fit ${s.min_fit}+`}><Slider value={s.min_fit} min={0} max={95} onChange={v => ss('min_fit', v)} /></Row>
@@ -105,7 +105,7 @@ export default function Settings() {
         <Group title="ApplyTwin">
           <Row label="Update automatically" hint="Installs each tested version on start and every hour, never mid-run."><div className="flex justify-end"><Switch checked={a.auto_update !== false} onChange={v => sa('auto_update', v)} /></div></Row>
           <UpdateRow />
-          <Row label="Count my install" hint="Sends a random ID, your OS and the ApplyTwin version once a day, so we know how many people use it. Never your name, resume or applications."><div className="flex justify-end"><Switch checked={a.telemetry !== false} onChange={v => sa('telemetry', v)} /></div></Row>
+          <Row label="Count my install" hint="Sends a random ID, your OS and the ApplyTwin version once a day, so we know how many people use it. Never your name, CV or applications."><div className="flex justify-end"><Switch checked={a.telemetry !== false} onChange={v => sa('telemetry', v)} /></div></Row>
         </Group>
       </div>
       </div>

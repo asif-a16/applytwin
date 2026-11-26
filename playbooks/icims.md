@@ -13,8 +13,8 @@
 - Most iCIMS portals require sign-in by email and often an hCaptcha: that is a hard stop for ApplyTwin. Fill the
   email only if the user asked, never solve the captcha; hand the tab to the user (Needs User, notes "iCIMS sign-in /
   hCaptcha at <url>"), then continue after they sign in.
-- Steps are paginated (Contact, Resume, Questions, EEO, Review). Upload the PDF on the resume step, verify the
+- Steps are paginated (Contact, Resume, Questions, EEO, Review). Upload the PDF on the CV step, verify the
   parsed fields, answer questions from the bank, and stop at Review unless auto_submit.
 - "You have already applied for this job" = duplicate: log Skipped "duplicate: already applied on iCIMS".
 - "This job is no longer accepting applications" = log Skipped "closed: ...".
-- Profile step with a resume already on file: replace it with the tailored PDF (Remove, then upload) and confirm the name.
+- Profile step with a CV already on file: replace it with the tailored PDF (Remove, then upload) and confirm the name.

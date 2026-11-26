@@ -10,7 +10,7 @@ import { TESTIMONIALS } from './testimonials.js'
 
 /* apply.twinly.tech: the public home of ApplyTwin, built the way Apple builds a product page. One idea per scroll,
    the system font set large and tight, real product UI as the picture, and motion only where it explains something:
-   the window opening, the resume fanning into versions, the bullets rewriting themselves, the words lighting up. */
+   the window opening, the CV fanning into versions, the bullets rewriting themselves, the words lighting up. */
 
 const INSTALL = 'curl -fsSL apply.twinly.tech/install | bash'
 const INSTALL_WIN = 'irm https://apply.twinly.tech/install.ps1 | iex'
@@ -48,7 +48,7 @@ export default function Site() {
             <span style={{ animationDelay: '0.12s' }} className="rise block muted">Your twin does the rest.</span>
           </h1>
           <p style={{ animationDelay: '0.22s' }} className="rise mx-auto mt-7 max-w-[660px] text-[19px] leading-[1.42] [text-wrap:balance] sm:text-[21px]">
-            ApplyTwin is a free app for your computer. It finds internships that fit you, writes a one-page resume for each posting and fills out the application.
+            ApplyTwin is a free app for your computer. It finds internships that fit you, writes a one-page CV for each posting and fills out the application.
             <span className="muted"> It runs on the Claude Code or Codex plan you already pay for.</span>
           </p>
           <div style={{ animationDelay: '0.3s' }} className="rise mx-auto mt-9 max-w-[640px] text-left">
@@ -67,7 +67,7 @@ export default function Site() {
         <p className="mx-auto mt-5 max-w-[1120px] min-[1800px]:max-w-[1360px] text-center text-[13px] faint">Autopilot, mid-run. Twenty-five applications queued, three already in.</p>
       </section>
 
-      {/* 2. One resume becomes many */}
+      {/* 2. One CV becomes many */}
       <OneToMany />
 
       {/* 3. How a single bullet changes */}
@@ -177,7 +177,7 @@ const AFTER = [
   ['It installs', 'It downloads ApplyTwin, plus Python and Node.js if your computer has none. Nothing to configure.'],
   ['The app opens', 'Your browser goes to localhost:4747. That is ApplyTwin, running on your own computer.'],
   ['Sign in with Google', 'Your setup and answers are saved to your account, so a new laptop picks up where you left off.'],
-  ['Add your resume', 'Drop in the one you have. You answer the usual application questions once.'],
+  ['Add your CV', 'Drop in the one you have. You answer the usual application questions once.'],
   ['Press Start', 'It applies in its own browser window and pings you when it needs you.'],
 ]
 
@@ -218,7 +218,7 @@ function Nav({ stars }) {
   )
 }
 
-/* One resume becomes many, in 3D: pinned while you scroll, the stack fans out into versions tailored for each company. */
+/* One CV becomes many, in 3D: pinned while you scroll, the stack fans out into versions tailored for each company. */
 function OneToMany() {
   const ref = useRef(null)
   const progress = useRef(0)
@@ -237,7 +237,7 @@ function OneToMany() {
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-[11vh] z-10 px-4">
           <h2 className="display-l mx-auto max-w-[1120px] min-[1800px]:max-w-[1360px] text-[clamp(38px,6vw,72px)]">
-            <span className="block">One resume.</span>
+            <span className="block">One CV.</span>
             <span className="block" style={{ color: 'var(--fg-2)', opacity: 0.18 + 0.82 * t }}>A version for every job.</span>
           </h2>
         </div>
@@ -246,7 +246,7 @@ function OneToMany() {
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-[6vh] z-10 px-4">
           <div className="mx-auto flex max-w-[1120px] min-[1800px]:max-w-[1360px] items-baseline justify-between gap-4 text-[14px]">
-            <span className="muted"><span className="font-semibold tabular-nums text-[var(--fg)]">{n} {n === 1 ? 'resume' : 'resumes'}</span>{n > 1 ? ', each written for one company' : ', yours'}</span>
+            <span className="muted"><span className="font-semibold tabular-nums text-[var(--fg)]">{n} {n === 1 ? 'CV' : 'CVs'}</span>{n > 1 ? ', each written for one company' : ', yours'}</span>
             <span className="hidden items-center gap-2 faint sm:flex"><span className="inline-block h-[3px] w-5 rounded-full bg-[var(--blue)]" />rewritten for that job</span>
           </div>
         </div>
@@ -273,7 +273,7 @@ function Word({ p, at, span, strong, children }) {
 }
 
 /* The hard limits, in a dark band, scrubbed line by line. */
-const NEVER = ['Type your password.', 'Solve a CAPTCHA.', 'Create an account in your name.', 'Accept a legal agreement.', 'Change a number, title or employer on your resume.']
+const NEVER = ['Type your password.', 'Solve a CAPTCHA.', 'Create an account in your name.', 'Accept a legal agreement.', 'Change a number, title or employer on your CV.']
 function Never() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.75', 'end 0.6'] })
@@ -306,8 +306,8 @@ function NeverLine({ p, i, n, children }) {
   )
 }
 
-/* The heart of it, pinned while you scroll: a job's requirements light up one by one, and the resume rewrites itself
-   to prove each one. A well-known public resume; every rewrite keeps the original facts, as the real fact checker requires. */
+/* The heart of it, pinned while you scroll: a job's requirements light up one by one, and the CV rewrites itself
+   to prove each one. A well-known public CV; every rewrite keeps the original facts, as the real fact checker requires. */
 const ROLE = { company: 'NASA', domain: 'nasa.gov', title: 'Human Spaceflight Program Lead' }
 // Elon Musk's public record, tailored for one role: every "after" line is a real, public fact about him
 const STEPS = [
@@ -416,7 +416,7 @@ function AppWindow() {
   const queue = [['Google', 'google.com', 'Software Engineering Intern', 98], ['OpenAI', 'openai.com', 'Research Engineer Intern', 97],
     ['Jane Street', 'janestreet.com', 'Software Engineer Intern', 96], ['Citadel', 'citadel.com', 'Quantitative Research Intern', 95],
     ['Two Sigma', 'twosigma.com', 'Quant Research Intern', 94], ['Anthropic', 'anthropic.com', 'Software Engineer Intern', 94]]
-  const STEPS = ['Opening the posting', 'Tailoring your resume', 'Filling the application', 'Submitted']
+  const STEPS = ['Opening the posting', 'Tailoring your CV', 'Filling the application', 'Submitted']
   const box = useRef(null)
   const seen = useInView(box, { margin: '-20% 0px' })
   const [tick, setTick] = useState(0)
@@ -432,7 +432,7 @@ function AppWindow() {
   const done = [['Apple', 'apple.com', 'Software Engineering Intern'], ['Palantir', 'palantir.com', 'Forward Deployed Engineer Intern'],
     ['Meta', 'meta.com', 'Software Engineer Intern'], ...queue.slice(0, job).map(([c, d, t]) => [c, d, t])].slice(-3).reverse()
   const count = 3 + job + (step === 'Submitted' ? 1 : 0)
-  const nav = ['Today', 'Jobs', 'Resume', 'Answers', 'Applications', 'Autopilot']
+  const nav = ['Today', 'Jobs', 'CV', 'Answers', 'Applications', 'Autopilot']
   return (
     <div ref={box} className="mx-auto w-full max-w-[1120px] min-[1800px]:max-w-[1360px] overflow-hidden appwin rounded-[14px] text-left"
       style={{ background: '#1c1c1e', color: '#f5f5f7', colorScheme: 'dark' }}>

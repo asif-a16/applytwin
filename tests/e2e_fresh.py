@@ -113,7 +113,7 @@ def main():
     # 1. empty setup: doctor must say what's missing, with fixes, and nothing about API keys
     code, out = cli('doctor')
     check('doctor runs on an empty setup', 'Resume imported' in out, f'exit {code}')
-    check('doctor flags the missing resume with a fix', 'Drop your resume' in out)
+    check('doctor flags the missing resume with a fix', 'Drop your CV' in out)
     check('doctor never asks for an API key', 'API_KEY' not in out and 'api key' not in out.lower().replace('no api key', ''))
 
     # 2. import a resume from a non-CS field

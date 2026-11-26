@@ -288,7 +288,7 @@ def lint(resume, pages=None, pdf_text=None):
              or (k == 'school' and re.search(r',\s*(?:B\.?S|B\.?A|M\.?S|Bachelor|Master)\b', str(e.get(k) or '')))]
     if re.search(r'[*_`]{2}', (resume.get('basics') or {}).get('name') or ''):
         messy.append((resume.get('basics') or {}).get('name'))
-    add('fields', not messy, 'Schools, employers and titles read cleanly' + (': fix these in Resume Studio' if messy else ''), items=messy)
+    add('fields', not messy, 'Schools, employers and titles read cleanly' + (': fix these in CV Studio' if messy else ''), items=messy)
     if pages is not None:
         yrs = _years_out(resume)
         add('pages', pages == 1 or (pages == 2 and yrs > 8), f'{pages} page(s): students and new grads keep it to one')

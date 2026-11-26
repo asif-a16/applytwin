@@ -4,7 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { paperTexture } from './paperTexture'
 
-/* Step 02: one sheet of paper, the same person. As you scroll it turns over, and each side it shows is that resume
+/* Step 02: one sheet of paper, the same person. As you scroll it turns over, and each side it shows is that CV
    rewritten for the next company: the lines that changed are tinted blue. stage runs 0 -> 2 (Google, NVIDIA, Jane Street). */
 
 const W = 0.85, H = 1.1

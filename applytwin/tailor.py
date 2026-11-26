@@ -351,9 +351,14 @@ def _variant(prof, title):
 
 def region_overlay(job):
     """The regional overlay for this posting's country (resume_patterns.json "regions": India, continental Europe), or None.
-    It is laid over whatever profile the posting gets (a Google job in Bengaluru keeps big-tech SWE and adds India's)."""
-    from . import regions
-    key = regions.resume_region(job)
+    It is laid over whatever profile the posting gets (a Google job in Bengaluru keeps big-tech SWE and adds India's).
+    A posting with no single country gets the user's home country's overlay (the UK one for a UK user, none for a US one)."""
+    from . import regions, store
+    try:
+        prof = store.profile()
+    except Exception:
+        prof = None
+    key = regions.resume_region(job, prof)
     ov = (patterns().get('regions') or {}).get(key) if key else None
     return dict(ov, id=key) if ov else None
 
@@ -1495,7 +1500,7 @@ def learn_avoid(v):
 # ---------------------------------------------------------------- live progress
 # what a resume build is doing right now, per job, with a time-left estimate from how long each step has actually taken
 # on this computer (Claude/Codex speed differs a lot between people and plans)
-STAGES = [('plan', 'Writing your resume plan'), ('fix', 'Fixing lines the fact checker flagged'),
+STAGES = [('plan', 'Writing your CV plan'), ('fix', 'Fixing lines the fact checker flagged'),
           ('audit', 'Checking every rewrite is true'), ('fit', 'Fitting one page and making the PDF')]
 DEFAULT_SECS = {'plan': 25, 'fix': 22, 'audit': 25, 'fit': 15}   # Sonnet without extended thinking; each computer learns its own
 PROGRESS = {}
@@ -1793,8 +1798,10 @@ def _tailor(v, job, jd, mode, plan, style, out_dir, track, request=None):
     track.stage('fit')
     out_dir = out_dir or store.path('resumes', job.get('id', 'general'))
     from . import regions
-    regions.apply_conventions(res, job)   # the job's country: A4 + "CV" outside the US/Canada, CGPA label in India (layout only)
-    name = (re.sub(r'[^\w]+', '_', res['basics'].get('name', 'Resume') or '', flags=re.UNICODE).strip('_') or 'Resume') + f'_{regions.file_label(job)}.pdf'
+    from . import store
+    prof = store.profile()
+    regions.apply_conventions(res, job, prof)   # the job's country (else the user's): A4 + "CV" outside the US/Canada, CGPA in India
+    name = (re.sub(r'[^\w]+', '_', res['basics'].get('name', 'Resume') or '', flags=re.UNICODE).strip('_') or 'Resume') + f'_{regions.file_label(job, prof)}.pdf'
     pdf = os.path.join(out_dir, name)
     kws = ats.keywords(jd)
     worth = trim_worth(res, kws, jd)

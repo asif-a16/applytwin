@@ -74,8 +74,8 @@ def reply(i, result=None, error=None):
     sys.stdout.flush()
 
 
-STEPS = {'claim': 'Opening the posting', 'get_job': 'Opening the posting', 'tailor_prompt': 'Tailoring your resume',
-         'tailor_apply': 'Tailoring your resume', 'render_resume': 'Tailoring your resume', 'ats_report': 'Checking your resume',
+STEPS = {'claim': 'Opening the posting', 'get_job': 'Opening the posting', 'tailor_prompt': 'Tailoring your CV',
+         'tailor_apply': 'Tailoring your CV', 'render_resume': 'Tailoring your CV', 'ats_report': 'Checking your CV',
          'playbook': 'Filling the application', 'answer_questions': 'Filling the application', 'job_questions': 'Filling the application',
          'save_answer': 'Filling the application', 'notify': 'Asking you something', 'log_application': 'Logging it',
          'next_jobs': 'Picking the next job', 'queue': 'Picking the next job', 'pending_jobs': 'Picking the next job',

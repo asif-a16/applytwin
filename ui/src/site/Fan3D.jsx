@@ -4,7 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { paperTexture } from './paperTexture'
 
-/* One resume becomes many: real paper sheets in studio light. Scrolled from 0 to 1, a single stack (your resume) fans out
+/* One CV becomes many: real paper sheets in studio light. Scrolled from 0 to 1, a single stack (your CV) fans out
    into an arc of versions, each tailored for one company, while the camera eases in. The pointer tilts the scene a little. */
 
 const COMPANIES = [['Jane Street', 96], ['NVIDIA', 95], ['Google', 98], ['Meta', 96], [null, 0], ['Citadel', 94], ['Palantir', 97], ['Anduril', 94], ['Stripe', 95]]
@@ -28,7 +28,7 @@ function Sheet({ i, n, company, fit, progress, pointer }) {
     const s = progress.current
     const t = ease(clamp(s * 1.35 - Math.abs(i - mid) * 0.06))
     const R = 2.2
-    // stacked (a neat ream, your resume on top) -> fanned (an arc of tailored versions around you)
+    // stacked (a neat ream, your CV on top) -> fanned (an arc of tailored versions around you)
     const sx = 0, sy = -Math.abs(i - mid) * 0.008, sz = -Math.abs(i - mid) * 0.02
     const fx = Math.sin(a) * R, fy = 0.04 * Math.cos(a * 2) - 0.02, fz = (Math.cos(a) - 1) * R
     const m = ref.current

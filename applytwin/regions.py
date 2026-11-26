@@ -374,6 +374,26 @@ def targets(prof):
     return cs, cities
 
 
+HOME = 'GB'   # the default country: ApplyTwin is set up for the UK first (CV, A4, DD/MM/YYYY, UK right to work)
+
+
+def home(prof=None):
+    """The user's main country: the first country they picked, else the country they live in, else the UK (a profile
+    that picked no countries searches the US first, so the US). prof None = nothing known: the UK."""
+    if prof is None:
+        return HOME
+    prof = prof or {}
+    for x in (prof.get('search') or {}).get('countries') or []:
+        k = country_code(x)
+        if k:
+            return k
+    lives = country_code(prof.get('country') or '')
+    if lives:
+        return lives
+    s = prof.get('search')
+    return 'US' if isinstance(s, dict) and 'countries' in s and not s.get('countries') else HOME
+
+
 def international(prof):
     """True when the user picked countries in Settings / Welcome (otherwise the original US-first matching runs unchanged)."""
     return bool(targets(prof)[0])
@@ -527,7 +547,10 @@ PROGRAMS = [   # key, label, title pattern; the first three are internship-like,
                                                                     r'student job|part[- ]time student)\b', re.I)),
     ('internship', 'Internship', re.compile(r"\b(intern|interns|internship|praktikum|praktikant(?:in)?|pflichtpraktikum|stagiaire|stagiair|"
                                            r"tirocinio|tirocinante|pr[aá]cticas|becario|sta[zż](?:ysta)?|praktik|harjoittelija|"
-                                           r"sde[- ]?intern|summer (?:analyst|associate))\b|^stage\s*[-–:|(]|\bstage (?:de|d'|en|ingenieur|"
+                                           r"sde[- ]?intern|summer (?:analyst|associate)|spring (?:week|insight|internship|programme)|"
+                                           r"(?:spring|summer|student|graduate|undergraduate|first[- ]year|discovery|virtual) insight "
+                                           r"(?:week|day|programme|program)|insight (?:week|day)s?(?! (?:manager|lead|analyst|coordinator))|"
+                                           r"work experience (?:week|programme))\b|^stage\s*[-–:|(]|\bstage (?:de|d'|en|ingenieur|"
                                            r"ingénieur|developpeur|développeur|data|business|marketing|finance)\b|\b(?:4|5|6) mois\b", re.I)),
     ('graduate_scheme', 'Graduate scheme', re.compile(r'\b(graduate (?:scheme|programme|program|trainee|analyst|engineer|developer|'
                                                      r'software engineer|consultant|associate)|grad scheme|trainee programme|management trainee|'
@@ -684,10 +707,24 @@ def named_country(q):
     return None
 
 
-def match(q, bank, options=None):
+GENERIC_RIGHTS = re.compile(r'right to work|(?:authori[sz]ed|eligible|permitted|entitled|allowed|legally able) to work|work (?:permit|authori[sz]ation)|'
+                            r'work rights|legally work|sponsor|(?:require|need)\w*\s+(?:a\s+)?(?:work\s+)?visa|visa (?:sponsor|support|assistance)',
+                            re.I)
+US_VISA = re.compile(r'\bh-?1b\b|\bf-?1\b|\bj-?1\b|\bopt\b|\bstem opt\b|\bcpt\b|green card|\bead\b|uscis|\bu\.?s\.? person\b|\bitar\b', re.I)
+
+
+def names_us(q):
+    """True when a question is about the US ('the US', 'U.S.', 'United States', 'USA')."""
+    return bool(re.search(r'\b(US|USA)\b', q or '') or re.search(r'\bthe u\.?s\b', q or '', re.I) or US_VISA.search(q or '')
+                or _COUNTRY_RE['US'].search(fold(q or '').lower()))
+
+
+def match(q, bank, options=None, default=None, strict=False):
     """Answers the international questions before the general matcher runs; None for anything else. Right to work and
     sponsorship for a named country (never the US answer for a UK question), notice period, CTC, salary in local currency,
-    GDPR consent, nationality, 10th/12th marks, CGPA, languages."""
+    GDPR consent, nationality, 10th/12th marks, CGPA, languages. default = the country a right-to-work or sponsorship
+    question means when it names none (the job's country, else the user's home country); 'US' or None leaves those
+    questions to the US answers. strict = default is the job's own country (not a guess from the user's home)."""
     from . import answers as ans
     q = (q or '').strip()
     if not q:
@@ -695,6 +732,12 @@ def match(q, bank, options=None):
     rows = {r.get('key'): r for r in bank}
     low = q.lower()
     code = named_country(q)
+    if not code and default and default != 'US' and GENERIC_RIGHTS.search(q) and not names_us(q):
+        # "Are you legally authorised to work in the country this role is in?" for a London job: the UK answer. Without a
+        # job (strict False) the home country answers only when the user has given it; otherwise the US answers stand.
+        k = 'EU' if default in EEA and f'work_auth_{default}' not in rows else default
+        if strict or (rows.get(f'work_auth_{k}') or {}).get('answer') or (rows.get(f'sponsor_{k}') or {}).get('answer'):
+            code = default
 
     def out(key, answer, label):
         if answer in (None, ''):
@@ -715,7 +758,8 @@ def match(q, bank, options=None):
             return out(f'work_auth_{k}', '', f'right to work in {place} without sponsorship')
         if works:
             return out(f'work_auth_{k}', rights, f'right to work in {place}')
-        if re.search(r'sponsor|visa', low) and not re.search(r'type of|which visa|what visa', low):
+        if re.search(r'sponsor|(?:require|need)\w*\s+(?:a\s+)?(?:work\s+)?visa|visa (?:sponsor|support|assistance)', low) \
+                and not re.search(r'type of|which visa|what visa', low):
             return out(f'sponsor_{k}', spons, f'visa sponsorship for {place}')
         if re.search(r'relocat', low):
             return out('relocate_abroad', (rows.get('relocate_abroad') or {}).get('answer', ''), f'relocating to {place}')
@@ -753,7 +797,7 @@ def conventions(country=None, prof=None):
       gpa_label 'CGPA' in India (scale out of 10 shown as written), else 'GPA'
       date_fmt  how dates are written on forms ('DD/MM/YYYY' in the UK, Europe and India)
       extras    fields forms there sometimes ask for"""
-    k = country_code(country) or country or 'US'
+    k = country_code(country) or country or home(prof)
     us = k in ('US', 'CA')
     india = k == 'IN'
     return {
@@ -766,6 +810,17 @@ def conventions(country=None, prof=None):
     }
 
 
+UK_CLASS = re.compile(r'\b(first|1st|2[:.]1|2[:.]2|upper second|lower second|third|3rd|distinction|merit)\b', re.I)
+
+
+def gpa_label(e):
+    """The label before an education entry's grade on the page: what the entry sets, 'Grade' for a UK degree class
+    ('2:1', 'First Class Honours (predicted)', 'Distinction'), else 'GPA'."""
+    if e.get('gpa_label'):
+        return e['gpa_label']
+    return 'Grade' if UK_CLASS.search(str(e.get('gpa') or '')) else 'GPA'
+
+
 def job_country(job):
     """The one country a posting is in, or None when it names none or several."""
     cs = countries((job or {}).get('location') or '')
@@ -776,7 +831,7 @@ def apply_conventions(res, job, prof=None):
     """Set the page size and labels a tailored resume should use for this job's country, in place: res['paper'] ('A4' or
     'Letter') and, for India, education 'gpa_label' = 'CGPA' when the GPA is written out of 10. Returns the conventions.
     Content is never changed."""
-    conv = conventions(job_country(job))
+    conv = conventions(job_country(job), prof)
     res['paper'] = conv['paper']
     if conv['gpa_label'] == 'CGPA':
         for e in res.get('education') or []:
@@ -789,28 +844,37 @@ def apply_conventions(res, job, prof=None):
     return conv
 
 
-def resume_region(job):
-    """Which regional resume overlay a posting gets: 'india' for a job in India, 'europe' for continental Europe (EU/EEA and
-    Switzerland), else None. The UK, Canada and the rest have too few elite resumes in the corpus to set norms of their own.
-    The overlays themselves (what strong pages there do) live in resume_patterns.json under "regions"."""
+def resume_region(job, prof=None):
+    """Which regional CV overlay a posting gets: 'india' for a job in India, 'europe' for continental Europe (EU/EEA and
+    Switzerland), 'uk' for the UK (and for a posting that names no single country when the user's home country is the
+    UK), else None. The overlays themselves (what strong pages there do) live in resume_patterns.json under "regions"."""
     k = job_country(job)
-    return 'india' if k == 'IN' else 'europe' if k in EEA else None
+    if k is None:
+        cs = countries((job or {}).get('location') or '')
+        k = home(prof) if not cs or home(prof) in cs else None   # "Remote", or "NYC or London" for a UK user
+    return 'india' if k == 'IN' else 'europe' if k in EEA else 'uk' if k == 'GB' else None
 
 
-def file_label(job):
+def file_label(job, prof=None):
     """'CV' or 'Resume', for the PDF's file name (Jane_Doe_CV.pdf for a London job)."""
-    return conventions(job_country(job))['doc']
+    return conventions(job_country(job), prof)['doc']
+
+
+def a4(paper):
+    """True unless the page is explicitly US Letter (US and Canadian jobs): A4 is the default."""
+    return str(paper or '').upper() != 'LETTER'
 
 
 def paper_css(paper):
-    """Extra CSS for an A4 page (the base stylesheet is US Letter)."""
-    if str(paper or '').upper() != 'A4':
+    """Extra CSS for an A4 page (the base stylesheet is US Letter, used only for US and Canadian jobs)."""
+    if not a4(paper):
         return ''
     return '@page { size: A4; margin: 0; } .page { width: 210mm; min-height: 297mm; }'
 
 
 def format_date(value, country=None):
-    """'2027-05-15' / '05/15/2027' (US order) -> the local order ('15/05/2027'); text without a full date comes back unchanged."""
+    """'2027-05-15' / '05/15/2027' (US order) -> the local order ('15/05/2027', the UK's, when no country is given); text
+    without a full date comes back unchanged."""
     v = (value or '').strip()
     m = re.fullmatch(r'(\d{4})-(\d{1,2})-(\d{1,2})', v) or None
     if m:

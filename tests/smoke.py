@@ -988,7 +988,7 @@ _pl_in = _tp._awards_rule({'awards': [2], 'order': ['education', 'experience']},
 _pl_us = _tp._awards_rule({'awards': [2], 'order': ['education']}, _vaw, {'region': None, 'pattern': _pj['profiles']['ml_research']})
 res.append(ok(all(isinstance(_pj['profiles'][k].get('n'), int) and 'elite' in _pj['profiles'][k].get('basis', '') for k in _shipped)
               and _ov == {'Bengaluru, Karnataka, India': 'india', 'Zurich, Switzerland': 'europe', 'Berlin, Germany': 'europe',
-                          'London, UK': None, 'New York, NY': None, '': None}
+                          'London, UK': 'uk', 'New York, NY': None, '': 'uk'}
               and 'JOBS IN INDIA ALSO DO' in _pin and 'BIG-TECH' in _pin and 'ALSO DO' not in _pus
               and _pl_in['awards'] == [2, 0, 1] and _pl_in['order'][-1] == 'awards' and _pl_us['awards'] == [2],
               f'elite basis on shipped profiles; regional overlays ({_ov}); India awards section ({_pl_in.get("awards")})'))
@@ -1428,7 +1428,7 @@ _tst._house_rules(_fin, {'field': 'finance'})
 res.append(ok(not any(e.get('stack') for e in _fin['experience']), 'finance resumes get no stack on the title line'))
 _lr = copy.deepcopy(_ex); _lr['experience'] = copy.deepcopy(_sr['experience'])
 _ltx = _lx.build_tex(_lr)
-res.append(ok(r'\lk{' in _ltx and r'\underline{' not in _ltx and r'$|$ Go, Kafka' in _ltx and r'\atfs{}' in _ltx,
+res.append(ok(r'\lk{' in _ltx and r'\underline{' not in _ltx and r'$|$ Go, Kafka' in _ltx.replace('{}', '') and r'\atfs{}' in _ltx,
               'latex: links use the thin underline, role stacks are on the title line, real spaces kept around links'))
 _rl2 = render.render(_lr, 'latex', os.path.join(os.environ['APPLYTWIN_HOME'], 'l2.pdf'))
 _tl2 = render.pdf_text(_rl2['pdf']) or ''

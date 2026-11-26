@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from .regions import gpa_label
 
 PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \usepackage[empty]{fullpage}
@@ -21,6 +22,9 @@ PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \newcommand{\atfs}{\ifdefined\pdffakespace\pdffakespace\fi}
 \usepackage[english]{babel}
 \usepackage{tabularx}
+% cmap (before fontenc): a ToUnicode map for the T1 encoding, so the text layer reads real characters even when the T1
+% fonts are bitmap EC fonts (no cm-super installed), whose glyphs carry no names: the date dash came out as U+0015
+\usepackage{cmap}
 \usepackage[T1]{fontenc}
 \ifdefined\pdfgentounicode\input{glyphtounicode}\fi  % pdfTeX only; tectonic/xelatex/lualatex skip it
 \pagestyle{empty}
@@ -64,7 +68,17 @@ def url(u):
 def esc(s):
     # f{}i: an empty group stops TeX forming the ff/fi/fl/ffi ligatures, which XeTeX (tectonic) writes into the PDF as
     # single U+FB0x characters, so 'efficient' wouldn't match a parser's keyword search
-    return re.sub(r'f(?=[fil])', 'f{}', ''.join(SPECIAL.get(c, c) for c in (s or '')))
+    # A{}w, T{}o: the same empty group stops the big kerns after these capitals, which PDF text extractors read as a word
+    # gap ("PyT orch", "W orkshop", "A w ards"), so a keyword or a section heading went missing
+    s = re.sub(r'f(?=[fil])', 'f{}', ''.join(SPECIAL.get(c, c) for c in (s or '')))
+    return re.sub(r'([AFKLPTVWY])(?=[A-Za-z])', r'\1{}', s)
+
+
+def heading(s):
+    """A section title for the small-caps heading: an empty group between every two letters, because in small caps every
+    pair kerns like capitals ("Aw ards" in the text layer) and a parser then can't find the heading."""
+    s = s or ''
+    return ''.join(esc(c) + ('{}' if c.isalpha() and n.isalpha() else '') for c, n in zip(s, s[1:] + ' '))
 
 
 def tex(s):
@@ -107,13 +121,13 @@ def build_tex(r, k=1.0):
                                                      'research': 'Research and Publications', 'leadership': 'Leadership',
                                                      'volunteering': 'Volunteer Experience', 'skills': 'Skills',
                                                      'certifications': 'Licenses and Certifications', 'awards': 'Awards'}.get(sec, sec.title())
-        body.append(r'\section{%s}' % esc(title))
+        body.append(r'\section{%s}' % heading(title))
         if sec == 'education':
             body.append(r'\resumeSubHeadingListStart')
             for e in data:
                 from .render import degree_line
                 deg = '; '.join(x for x in (degree_line(e), e.get('minor') and 'Minor in ' + e['minor'],
-                                            e.get('gpa') and f"{e.get('gpa_label') or 'GPA'}: {e['gpa']}") if x)
+                                            e.get('gpa') and f"{gpa_label(e)}: {e['gpa']}") if x)
                 body.append(r'\resumeSubheading{%s}{%s}{%s}{%s}' % (esc(e.get('school')), esc(e.get('location')), esc(deg), dates(e)))
                 # honors share one line (as in the HTML templates) instead of one bullet each
                 extra = ([r' $\cdot$ '.join(tex(h) for h in e['honors'])] if e.get('honors') else []) + \
@@ -158,7 +172,8 @@ def build_tex(r, k=1.0):
     # \small and the headings are relative to the class size, so shrink by changing the class size (11pt -> 10pt), and at
     # the last step also tighten the space between items
     pre = PREAMBLE if k >= 0.99 else PREAMBLE.replace('[letterpaper,11pt]', '[letterpaper,10pt]')
-    if str(r.get('paper') or '').upper() == 'A4':   # outside the US and Canada (regions.conventions)
+    from .regions import a4
+    if a4(r.get('paper')):   # A4 by default; Letter only for US and Canadian jobs (regions.conventions)
         pre = pre.replace('letterpaper', 'a4paper')
     if k < 0.93:
         pre += '\n\\setlist{itemsep=-1pt}\n'

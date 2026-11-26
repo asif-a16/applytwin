@@ -6,7 +6,7 @@ import { Avatar, Segmented, spring } from '../components/ui'
 import { StarButton } from '../lib/star'
 
 /* apply.twinly.tech/app: your ApplyTwin account from any device. Your twin applies from your own computer (on your
-   Claude Code or Codex plan); every application it logs syncs here, with the exact resume it sent. */
+   Claude Code or Codex plan); every application it logs syncs here, with the exact CV it sent. */
 
 const URL = 'https://advktwnedlgnhswpxokg.supabase.co'
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmt0d25lZGxnbmhzd3B4b2tnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzkzMTUsImV4cCI6MjA5NzE1NTMxNX0.kPKEMNuqvvzGWKHRSnCtq4vkiYQTicX0wDSiwyYj7LE'
@@ -99,7 +99,7 @@ export default function Dashboard() {
     try {
       const r = await sb(`/storage/v1/object/sign/applytwin/${a.resume_path.split('/').map(encodeURIComponent).join('/')}`, session, { method: 'POST', body: JSON.stringify({ expiresIn: 600 }) })
       window.open(URL + '/storage/v1' + r.signedURL, '_blank')
-    } catch (e) { toast.error('Could not open that resume', { description: e.message }) }
+    } catch (e) { toast.error('Could not open that CV', { description: e.message }) }
   }
   const signOut = () => { save(null); setSession(null); setApps(null); setAccount(null) }
 
@@ -165,9 +165,9 @@ export default function Dashboard() {
 
               <aside className="min-w-0 space-y-8">
                 <Group title="Your profile" footer="Edit it in the ApplyTwin app on your computer; it syncs here.">
-                  {[['Name', p.name], ['School', [p.school, p.grad_year && `class of ${p.grad_year}`].filter(Boolean).join(', ')],
+                  {[['Name', p.name], ['School', [p.school, p.grad_year && `graduating ${p.grad_year}`].filter(Boolean).join(', ')],
                     ['Looking for', (p.search?.roles || []).slice(0, 4).join(', ')], ['Dream companies', (p.search?.companies_priority || []).slice(0, 5).join(', ')],
-                    ['Resume', account?.vault?.experience ? `${account.vault.experience.length} roles · ${(account.vault.projects || []).length} projects` : '']]
+                    ['CV', account?.vault?.experience ? `${account.vault.experience.length} roles · ${(account.vault.projects || []).length} projects` : '']]
                     .filter(([, v]) => v).map(([k, v]) => (
                       <div key={k} className="flex items-baseline justify-between gap-4 px-4 py-3 text-[14px]"><span className="shrink-0 text-muted">{k}</span><span className="truncate text-right text-white">{v}</span></div>))}
                   {account && !p.name && <div className="px-4 py-4 text-[14px] text-muted">Sign in from the ApplyTwin app on your computer to sync your profile.</div>}
@@ -186,7 +186,7 @@ export default function Dashboard() {
 function Connect() {
   const steps = [['Install ApplyTwin on your computer', 'Paste this into your terminal. It runs on your Claude Code or Codex plan, with no API keys.', true],
     ['Sign in there with this Google account', 'ApplyTwin opens in your browser at localhost:4747. If it did not open, type applytwin in your terminal.'],
-    ['Press Start in Autopilot', 'Every application your twin fills shows up on this page, with the exact resume it sent.']]
+    ['Press Start in Autopilot', 'Every application your twin fills shows up on this page, with the exact CV it sent.']]
   return (
     <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="mt-3 max-w-[640px]">
       <p className="text-[17px] leading-[1.45] text-white/75">Your account is ready. ApplyTwin itself runs on your computer, and this page shows what it sent. Three steps to your first application:</p>
@@ -207,11 +207,11 @@ function SignedOut() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="mx-auto max-w-[520px] pt-10 text-center">
       <h1 className="text-[clamp(38px,10.5vw,48px)] font-bold leading-[1.02] tracking-[-0.04em] text-white [text-wrap:balance]">Your applications, anywhere.</h1>
-      <p className="mx-auto mt-4 max-w-[420px] text-[17px] text-white/75">Sign in with the Google account you use in ApplyTwin to see every application your twin sent, and the resume it sent with each one.</p>
+      <p className="mx-auto mt-4 max-w-[420px] text-[17px] text-white/75">Sign in with the Google account you use in ApplyTwin to see every application your twin sent, and the CV it sent with each one.</p>
       <motion.button whileTap={{ scale: 0.96 }} onClick={signIn} className="mx-auto mt-8 flex h-12 items-center gap-2.5 rounded-full bg-white px-7 text-[16px] font-semibold text-[#0b1020]">
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" /><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" /><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" /><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" /></svg>
         Sign in with Google</motion.button>
-      <p className="mx-auto mt-6 max-w-[440px] text-[13.5px] leading-relaxed text-white/55">This page only shows your results. ApplyTwin itself runs on your computer: after you install it, it opens at <a href="http://localhost:4747" className="font-mono text-white/80 underline">localhost:4747</a>, and that's where you sign in, add your resume and press Start.</p>
+      <p className="mx-auto mt-6 max-w-[440px] text-[13.5px] leading-relaxed text-white/55">This page only shows your results. ApplyTwin itself runs on your computer: after you install it, it opens at <a href="http://localhost:4747" className="font-mono text-white/80 underline">localhost:4747</a>, and that's where you sign in, add your CV and press Start.</p>
       <p className="mt-8 text-[14px] text-white/55">New to ApplyTwin? Install it first:</p>
       <div className="mx-auto mt-3 max-w-[520px] text-left"><Install /></div>
     </motion.div>
@@ -228,7 +228,7 @@ function AppRow({ a, onResume }) {
         <div className="truncate text-[12.5px] text-muted">{a.company} · {new Date(a.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{a.notes ? ` · ${a.notes}` : ''}</div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        {a.resume_path && <button onClick={onResume} title="The resume it sent" className="text-white/40 hover:text-white"><FileText className="size-4" /></button>}
+        {a.resume_path && <button onClick={onResume} title="The CV it sent" className="text-white/40 hover:text-white"><FileText className="size-4" /></button>}
         {a.url && <a href={a.url} target="_blank" rel="noreferrer" title="Open the posting" className="text-white/40 hover:text-white"><ExternalLink className="size-4" /></a>}
         <span className="flex w-[92px] items-center justify-end gap-1.5 text-[13px] font-medium" style={{ color }}><Icon className="size-3.5" />{text}</span>
       </div>

@@ -21,17 +21,17 @@ themselves on a careful day.
 ## For each job
 1. **Pick**: `applytwin_next_jobs(n)` (or the job the user named) -> `applytwin_claim(job_id)`. Skip if not claimed.
 2. **Read**: `applytwin_get_job(job_id)`. Check knockouts against the profile: graduation window, work
-   authorization/sponsorship, degree level, location, citizenship/clearance. The result's `knockouts` lists the ones
+   right to work/sponsorship, degree level or classification (e.g. "2:1 or above"), location, citizenship/clearance. The result's `knockouts` lists the ones
    ApplyTwin found in the description (e.g. "Graduation window Dec 2027 - Aug 2028; you graduate May 2029"); read the
    posting too, since windows are phrased many ways. If the user clearly doesn't qualify,
    `applytwin_log_application(job_id, "Skipped", "<that exact reason>")` and move on. If `already_applied` is not
    empty, this role was already submitted: log Skipped "duplicate: ..." and never submit it again.
 3. **Tailor** (if `apply.tailor_every_resume`):
-   - `applytwin_tailor_apply(job_id)` with NO plan. A dedicated writer builds the resume (focused plan, honesty
+   - `applytwin_tailor_apply(job_id)` with NO plan. A dedicated writer builds the CV (focused plan, honesty
      check, one-page fit); it started when you claimed the job, so do steps 4-5 first and call this when you reach the
      upload field. It returns `pdf` and `tex`. Use the returned `pdf`.
    - Write your own plan (`applytwin_tailor_prompt` then `applytwin_tailor_apply(job_id, plan)`) only when the user
-     asked for a specific change to this resume.
+     asked for a specific change to this CV.
 4. **Prepare answers**: Greenhouse: `applytwin_job_questions(job_id)`. Others: read the form's questions, then
    `applytwin_answer_questions([{question, options}], job_id)` (always the job_id, and the options of every dropdown or
    radio). `action: "knockout"` = the form's own options rule the user out (e.g. graduation years that stop before

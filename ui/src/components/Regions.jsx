@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { Segmented, Switch } from './ui'
 import { Chips } from '../pages/Settings'
 
-/* Working outside the US: countries and cities to work in, the right to work in each, local program types, and the
+/* Where to work (the UK by default): countries and cities to work in, the right to work in each, local program types, and the
    questions European and Indian forms ask. All of it is optional; nothing here is filled in for the user. */
 
 let cache = null
@@ -62,7 +62,7 @@ export function WhereAbroad({ p, setP, large, compact }) {
         <div className="space-y-2">{rightsRows(codes, r).map(([c, name]) =>
           <div key={c} className="flex flex-wrap items-center justify-between gap-2"><span className="text-[14.5px] text-ink">{name}</span>
             <Segmented value={wa[c] || ''} onChange={v => setP(x => ({ ...x, work_auth: { ...(x.work_auth || {}), [c]: v } }))} options={STATUS} /></div>)}</div></div>}
-      {codes.some(c => c !== 'US') && <div><div className={lbl}>Program types (none picked = all)</div>
+      {codes.some(c => c !== 'US') && <div><div className={lbl}>Programme types (none picked = all)</div>
         <div className="flex flex-wrap gap-1.5">{r.programs.map(pr => {
           const on = (s.programs || []).includes(pr.key)
           return <button key={pr.key} onClick={() => ss('programs', on ? (s.programs || []).filter(x => x !== pr.key) : [...(s.programs || []), pr.key])}

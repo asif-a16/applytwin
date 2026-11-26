@@ -1,7 +1,7 @@
 # ApplyTwin: instructions for coding agents (Codex, Claude Code, others)
 
 ApplyTwin is a local-first job-search autopilot. The user's data lives in `~/.applytwin` (override with `APPLYTWIN_HOME`).
-You are the user's agent: you use ApplyTwin's tools to find jobs, tailor resumes and fill applications in a browser.
+You are the user's agent: you use ApplyTwin's tools to find jobs, tailor CVs and fill applications in a browser.
 
 ## Tools
 Prefer the MCP server (`applytwin mcp`, registered as `applytwin`). Every tool is `applytwin_*`; start with
@@ -10,12 +10,19 @@ API (`./bin/applytwin app` -> http://localhost:4747/api/...).
 
 ## Skills
 Task guides live in `skills/` (also exposed as `.agents/skills/`):
-- `skills/applytwin-onboard/SKILL.md`: import resumes / LinkedIn / brain dump into the Career Vault, profile, answers
+- `skills/applytwin-onboard/SKILL.md`: import CVs / LinkedIn / brain dump into the Career Vault, profile, answers
 - `skills/applytwin-scout/SKILL.md`: scan sources, rank and present matches, watch for new postings
-- `skills/applytwin-tailor/SKILL.md`: build the best tailored one-page resume for a posting
+- `skills/applytwin-tailor/SKILL.md`: build the best tailored one-page CV for a posting
 - `skills/applytwin-apply/SKILL.md`: the end-to-end apply loop in the browser
 - `skills/applytwin-coach/SKILL.md`: review and strengthen the vault like a recruiter
 Per-ATS field guides: `playbooks/*.md` (also via `applytwin_playbook(ats)`).
+
+## UK first
+ApplyTwin is set up for the UK: new profiles search the UK (`search.countries: ["United Kingdom"]`), documents are
+CVs on A4 with DD/MM/YYYY dates, and profile questions are the UK ones (right to work in the UK, degree
+classification, A-levels/UCAS, equality monitoring). US jobs still work: US postings get a Letter-size resume and the
+US answers (`work_authorized_us`, `needs_sponsorship`, `citizenship`, EEO). Logic lives in `applytwin/regions.py`.
+User-facing text is British English.
 
 ## Non-negotiables
 - Truthful only. Never invent experience, numbers, tools, dates, GPA or availability. The tailor's fact guard

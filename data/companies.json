@@ -409,7 +409,13 @@
   "appsflyer|AppsFlyer",
   "xendit|Xendit",
   "careem|Careem",
-  "tamara|Tamara"
+  "tamara|Tamara",
+  "autotrader|Auto Trader UK",
+  "freenow|FREENOW",
+  "polyai|PolyAI",
+  "behavox|Behavox",
+  "cleo|Cleo",
+  "ovoenergy|OVO"
  ],
  "lever": [
   "Aprio",
@@ -459,7 +465,11 @@
   "mindtickle|Mindtickle",
   "zeta|Zeta",
   "fampay|FamPay",
-  "pocketfm|Pocket FM"
+  "pocketfm|Pocket FM",
+  "theathletic|The Athletic",
+  "harrisonst|Harrison Street",
+  "ekimetrics|Ekimetrics",
+  "intropic|Intropic"
  ],
  "ashby": [
   "1x",
@@ -641,7 +651,10 @@
   "plaid|Plaid",
   "airwallex|Airwallex",
   "sarvam|Sarvam AI",
-  "bureau|Bureau"
+  "bureau|Bureau",
+  "runna|Runna",
+  "upvest|Upvest",
+  "fanvue.com|Fanvue"
  ],
  "smartrecruiters": [
   "AbbVie",
@@ -824,6 +837,22 @@
   "maersk.wd3/Maersk_Careers|Maersk",
   "jll.wd1/jllcareers|JLL",
   "sanofi.wd3/SanofiCareers|Sanofi",
-  "expedia.wd108/search|Expedia"
+  "expedia.wd108/search|Expedia",
+  "lseg.wd3/Graduate_Careers|LSEG",
+  "aveva.wd3/AVEVA_careers|AVEVA",
+  "rollsroyce.wd3/Intern_Graduate|Rolls-Royce",
+  "lbg.wd3/Graduate_careers|Lloyds Banking Group",
+  "lbg.wd3/Undergraduate_careers|Lloyds Banking Group",
+  "dyson.wd3/dyson_careers|Dyson",
+  "fca.wd3/FCA_earlycareers|Financial Conduct Authority",
+  "bailliegifford.wd3/BaillieGiffordEarlyCareers|Baillie Gifford",
+  "tp.wd107/TP-ICAP|TP ICAP",
+  "archgroup.wd1/Careers|Arch Insurance",
+  "aig.wd1/early_careers|AIG",
+  "fticonsulting.wd108/FTIConsultingCareers|FTI Consulting",
+  "heidelbergmaterials.wd3/Heidelberg_Materials_UK_career_site|Heidelberg Materials UK",
+  "ag.wd3/Airbus|Airbus",
+  "nrf.wd3/External|Norton Rose Fulbright",
+  "gsk.wd5/ViiV_Careers|ViiV Healthcare"
  ]
 }

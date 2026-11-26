@@ -4,7 +4,7 @@ import { ArrowUp, LifeBuoy, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '../lib/api'
 
-const STARTERS = ['My resume disappeared', "It's showing roles I can't apply to", 'Autopilot stopped working', 'Change the cities I want']
+const STARTERS = ['My CV disappeared', "It's showing roles I can't apply to", 'Autopilot stopped working', 'Change the cities I want']
 
 // Something wrong, or something to change? Say it in plain words: your own Claude or Codex looks at your setup and fixes it.
 export function HelpChat() {
