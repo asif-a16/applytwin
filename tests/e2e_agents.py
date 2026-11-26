@@ -13,6 +13,7 @@ import os
 os.environ.setdefault('APPLYTWIN_NO_TWIN', '1')   # never open or reach the real twin browser
 os.environ.setdefault('APPLYTWIN_SCAN_INLINE', '1')   # scans stay in-process so tests can stand in for them
 os.environ["APPLYTWIN_NO_TELEMETRY"] = "1"   # tests never count as installs
+os.environ["APPLYTWIN_NO_NOTIFY"] = "1"   # no desktop notifications
 os.environ["APPLYTWIN_SKIP_SIGNIN"] = "1"   # no Google account in tests
 import shutil
 import subprocess
@@ -232,6 +233,7 @@ def main():
 
     try:
         if os.environ.get('CI'):   # only on CI machines, so running tests locally doesn't pop a real notification
+            os.environ.pop('APPLYTWIN_NO_NOTIFY', None)
             install.notify('ApplyTwin test', 'Code needed for "Acme" & co')
         check('desktop notification does not crash', True)
     except Exception as e:

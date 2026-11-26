@@ -11,6 +11,7 @@ import tempfile as _tf
 if 'res' not in globals():   # standalone: a throwaway home and the same helpers smoke.py has
     _os.environ.setdefault('APPLYTWIN_NO_TELEMETRY', '1')
     _os.environ.setdefault('APPLYTWIN_NO_AGENT', '1')
+    _os.environ['APPLYTWIN_NO_NOTIFY'] = '1'   # no desktop notifications
     _os.environ['APPLYTWIN_HOME'] = _tf.mkdtemp(prefix='applytwin-intl-')
     ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
     _sys.path.insert(0, ROOT)

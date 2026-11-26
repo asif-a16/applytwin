@@ -96,6 +96,8 @@ def _click_link(url):
 
 
 def notify(title, msg, url=''):
+    if os.environ.get('APPLYTWIN_NO_NOTIFY'):   # tests: made-up events never pop a real notification
+        return
     # title and message can come from a job page via the agent: they go in as data (argv / environment / a file), never
     # into AppleScript or PowerShell source, where a quote would let them run commands
     title, msg, url = ' '.join(str(title).split())[:120], ' '.join(str(msg).split())[:200], _app_link(url)
