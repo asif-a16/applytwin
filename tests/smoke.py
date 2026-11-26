@@ -1133,6 +1133,25 @@ _pf = {'work_authorized_us': False, 'location': 'Mumbai, India', 'willing_to_rel
 _kq = (match.quick_knockouts({'title': 'Data Intern', 'location': 'Remote - USA'}, _pf), match.quick_knockouts({'title': 'Data Intern', 'location': 'Bengaluru, India'}, _pf),
        match.quick_knockouts({'title': 'Data Intern', 'location': 'Remote - USA'}, {**_pf, 'work_authorized_us': True}))
 res.append(ok(_kq[0] and not _kq[1] and not _kq[2], f'US-only role for a non-authorized user abroad is a quick knockout {_kq}'))
+# search.max_age_days: only recent postings reach the agent; undated ones are held back, hand-added ones always go through
+_today = time.strftime('%Y-%m-%d')
+_old_day = time.strftime('%Y-%m-%d', time.localtime(time.time() - 10 * 86400))
+for _jid, _co, _posted, _src in (('ag1', 'Fresh Co', _today, 't'), ('ag2', 'Stale Co', _old_day, 't'), ('ag3', 'Undated Co', '', 't'),
+                                 ('ag4', 'Epoch Co', '1970-01-01', 't'), ('ag5', 'Workday Co', 'Posted 2 Days Ago', 't'),
+                                 ('ag6', 'Workday Old', 'Posted 30+ Days Ago', 't'), ('ag7', 'Manual Old', '', 'manual')):
+    _mkjob(_jid, _co, f'https://jobs.lever.co/{_jid}/1', ats='lever', source=_src)
+    store.execute('update jobs set posted=? where id=?', (_posted, _jid))
+_nj_any = {j['id'] for j in api.next_jobs(50)['jobs']}
+os.environ['APPLYTWIN_NO_RESCORE'] = '1'   # a rescore would re-rank these bare test jobs out of the queue
+api.update_profile({'search': {'max_age_days': 3}})
+_nj_age = {j['id'] for j in api.next_jobs(50)['jobs']}
+_q_age = {j['id'] for j in api.queue(200)['jobs']}
+api.update_profile({'search': {'max_age_days': 0}})
+os.environ.pop('APPLYTWIN_NO_RESCORE')
+_ag = {'ag1', 'ag2', 'ag3', 'ag4', 'ag5', 'ag6', 'ag7'}
+res.append(ok(_ag <= _nj_any and _nj_age & _ag == {'ag1', 'ag5', 'ag7'} and _q_age & _ag == {'ag1', 'ag5', 'ag7'},
+              f'max_age_days keeps only recent (and hand-added) jobs in the queue ({sorted(_nj_age & _ag)})'))
+store.execute("update jobs set status='zz-old' where id like 'ag%'")
 # closed postings and duplicates logged as Needs User are filed Skipped (nothing for the user to do)
 _mkjob('cl1', 'Closed Co', 'https://closed.wd5.myworkdayjobs.com/en-US/ext/job/123', ats='workday')
 api.claim('cl1')

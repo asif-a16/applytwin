@@ -98,6 +98,8 @@ export default function Settings() {
             <WhereAbroad p={p} setP={setP} /></Row>
           <Row label="Skip titles with" stack><Chips value={s.exclude} onChange={v => ss('exclude', v)} placeholder="senior, phd…" /></Row>
           <Row wide label={`Show jobs with fit ${s.min_fit}+`}><Slider value={s.min_fit} min={0} max={95} onChange={v => ss('min_fit', v)} /></Row>
+          <Row wide label={s.max_age_days ? `Only apply to jobs posted in the last ${s.max_age_days} day${s.max_age_days === 1 ? '' : 's'}` : 'Apply to jobs of any age'}
+            hint="Jobs with no posting date are left out while this is on. Jobs you add yourself always count."><Slider value={s.max_age_days || 0} min={0} max={30} step={1} onChange={v => ss('max_age_days', v)} /></Row>
         </Group>
         <div className="mb-1.5 px-4 text-[13px] font-medium text-muted">Application answers, used on every form</div>
         <div className="mb-8"><ProfileQuestions qs={qs} p={p} setP={setP} showMissing /></div>

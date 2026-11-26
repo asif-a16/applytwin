@@ -49,6 +49,7 @@ DEFAULT_PROFILE = {   # nothing about the person is assumed: unanswered fields s
         "countries": ["United Kingdom"], "cities": [],   # countries / cities to work in (the UK unless changed); empty = US-first matching
         "programs": [],                             # internship | placement | working_student | graduate_scheme | campus; empty = all
         "min_fit": 65,
+        "max_age_days": 0,                          # apply only to jobs posted this many days ago or fewer; 0 = any age
         "companies_priority": [], "companies_skip": [],
     },
     "apply": {

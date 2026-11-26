@@ -561,10 +561,10 @@ def fit(job, prof, vault_terms=None):
     us_citizen = re.match(r'\s*(u\.?s\.?|us|united states|american)\b.*citizen|^\s*citizen', cit) and not re.search(r'\bnot\b|non-?citizen', cit)
     if not abroad and cit and not us_citizen and CITIZEN.search(text):
         return 3, 'US citizenship or clearance required'
-    m = re.match(r'(20\d\d)-(\d\d)-(\d\d)', job.get('posted') or '')
-    if m:
+    pd = posted_date(job)
+    if pd:
         import datetime
-        age = (datetime.date.today() - datetime.date(*map(int, m.groups()))).days
+        age = (datetime.date.today() - pd).days
         if age > 120:
             score -= 25
             why.append('old posting')
@@ -577,3 +577,43 @@ def fit(job, prof, vault_terms=None):
         score += 15
         why.append('priority company')
     return max(1, min(100, round(score))), '; '.join(why)
+
+
+def posted_date(job):
+    """The day a job was posted, or None when its source gave no usable date. Workday only says "Posted 3 Days Ago" /
+    "Posted Today" / "Posted 30+ Days Ago": that counts back from when ApplyTwin first found the job."""
+    import datetime
+    p = (job.get('posted') or '').strip()
+    m = re.match(r'(\d{4})-(\d\d)-(\d\d)', p)
+    if m:
+        if int(m.group(1)) < 2000:   # 1970-01-01: the source sent no date (a 0 timestamp)
+            return None
+        try:
+            return datetime.date(*map(int, m.groups()))
+        except ValueError:
+            return None
+    low = p.lower()
+    found = job.get('found_at')
+    base = datetime.date.fromtimestamp(found) if found else datetime.date.today()
+    if re.search(r'\btoday\b|\bjust posted\b', low):
+        return base
+    if re.search(r'\byesterday\b', low):
+        return base - datetime.timedelta(days=1)
+    m = re.search(r'(\d+)\s*\+?\s*days?\s+ago', low)
+    if m:
+        return base - datetime.timedelta(days=int(m.group(1)))   # "30+ Days Ago" counts as 30: old enough for any limit
+    return None
+
+
+def too_old(job, prof):
+    """Why a job is outside the user's search.max_age_days window, or '' (no limit set, recent enough, or added by hand).
+    A job with no posting date is left out too: with a limit set, the user asked for recent jobs only."""
+    days = int(((prof or {}).get('search') or {}).get('max_age_days') or 0)
+    if days <= 0 or job.get('source') == 'manual':
+        return ''
+    import datetime
+    d = posted_date(job)
+    if not d:
+        return f'No posting date, and you only want jobs posted in the last {days} days.'
+    age = (datetime.date.today() - d).days
+    return f'Posted {age} days ago, outside your {days}-day limit.' if age > days else ''
