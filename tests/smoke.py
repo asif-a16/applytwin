@@ -1455,5 +1455,20 @@ _n1 = _upd.release_notice('', home=_nh, force=True); _n2 = _upd.release_notice('
 res.append(ok((_n1 is None) == (_upd.version() not in _upd.NOTICES) and _n2 is None,
               'release notice: shown once per install, then never again'))
 
+# Trackr: pages follow the job type and only a UK search reads them; dropped postings leave the queue
+_p0 = store.profile()['search']
+api.update_profile({'search': {'kind': 'new-grad', 'countries': ['United Kingdom'], 'trackr': ['uk-tech', 'uk-finance/spring-weeks']}})
+_tp = _srcs._trackr_pages()
+api.update_profile({'search': {'countries': ['Germany']}})
+_tp_de = _srcs._trackr_pages()
+api.update_profile({'search': {k: _p0.get(k) for k in ('kind', 'countries', 'trackr')}})
+res.append(ok(_tp == ['uk-tech/graduate-programmes', 'uk-finance/spring-weeks'] and _tp_de == [] and _srcs._trackr_date('03 Jan 27') == '2027-01-03',
+              f'Trackr pages follow the job type and the UK ({_tp}, {_tp_de})'))
+for _k in ('tk-keep', 'tk-gone'):
+    store.execute("insert or replace into jobs(id,source,company,title,url,apply_url,ats,found_at,fit,status) values(?,'trackr','Co','Graduate Programme','u','u','other',0,90,'new')", (_k,))
+with store.db() as _con:
+    _srcs._retire(_con, 'trackr', [{'id': 'tk-keep'}])
+res.append(ok([r['status'] for r in store.rows("select status from jobs where id in ('tk-keep','tk-gone') order by id")] == ['closed', 'new'],
+              'a posting gone from Trackr leaves the queue'))
 print(f'\n{sum(res)}/{len(res)} passed')
 sys.exit(0 if all(res) else 1)

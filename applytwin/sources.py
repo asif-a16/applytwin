@@ -10,6 +10,9 @@
   amazon, microsoft  amazon.jobs and Microsoft Careers search APIs, for the countries the user picked (UK, India, Germany...)
   community lists  GitHub trackers: SimplifyJobs, vanshb03 (listings.json); SpeedyApply, Northwestern FinTech quant,
                    Zapply, Simplify off-season (README tables)
+  trackr           app.the-trackr.com UK trackers (graduate schemes, internships, placements, spring weeks), read in a
+                   private headless Chrome since the site only renders in a browser; used with Trackr's permission.
+                   profile search.trackr picks trackers ('uk-tech', 'uk-finance') or pages ('uk-tech/off-cycle-internships')
   open APIs        The Muse (every field), RemoteOK, Remotive, Himalayas, Jobicy, Arbeitnow, Hacker News "Who is hiring"
   discovery        every board a tracker links to (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee)
                    is remembered and scanned whole, so one listed role brings in the company's other openings
@@ -431,6 +434,143 @@ def hn_hiring():
                   (c.get('created_at') or '')[:10], strip_html(t)[:6000], ats=detect_ats(link))
 
 
+# ------------------------------------------------------------------ Trackr (UK early-careers trackers, used with Trackr's permission)
+
+TRACKR = 'https://app.the-trackr.com'
+TRACKR_TABS = {'internship': ('summer-internships', 'industrial-placements', 'spring-weeks'),
+               'co-op': ('summer-internships', 'industrial-placements'),
+               'new-grad': ('graduate-programmes',), 'full-time': ('graduate-programmes',)}
+
+# Reads the rendered table: the header names the columns, a one-cell row starts a category, and a programme group's child
+# rows leave the company blank (it's on the group row above them).
+_TRACKR_JS = """(() => {
+  const H = [...document.querySelectorAll('thead th')].map(t => t.innerText.trim().toLowerCase());
+  const at = (c, k) => c[H.indexOf(k)], txt = e => e ? e.innerText.trim() : '';
+  const href = e => { const a = e && e.querySelector('a[href]'); return a ? a.href : ''; };
+  const out = []; let sec = '', co = '';
+  for (const r of document.querySelectorAll('tbody tr')) {
+    const c = [...r.children].filter(x => x.tagName === 'TD');
+    if (c.length === 1) { sec = txt(c[0]); continue; }
+    if (c.length < H.length) continue;
+    co = txt(at(c, 'company name')) || co;
+    if (r.querySelector('.fa-caret-right, .fa-caret-down')) continue;   // a group's header row: its programmes follow
+    out.push({sec, company: co, title: txt(at(c, 'programme name')), apply: href(at(c, 'programme name')),
+              open: txt(at(c, 'opening date')), close: txt(at(c, 'closing date')), materials: txt(at(c, 'materials')),
+              visa: txt(at(c, 'sponsors visa')), notes: txt(at(c, 'notes')), page: href(c[c.length - 1])});
+  }
+  return out;
+})()"""
+_TRACKR_EXPAND = """(() => { const g = [...document.querySelectorAll('tbody tr')].filter(r => r.querySelector('.fa-caret-right'));
+  g.forEach(r => r.click()); return g.length; })()"""
+
+
+def _trackr_pages():
+    """Tracker pages to read: profile search.trackr lists trackers ('uk-tech', 'uk-finance') or exact pages
+    ('uk-tech/off-cycle-internships'); default UK Tech, for the tabs that fit the job type. Only when the UK is searched."""
+    from . import regions
+    prof = store.profile()
+    s = prof.get('search') or {}
+    countries = regions.targets(prof)[0]
+    if countries and 'GB' not in countries:
+        return []
+    kind = s.get('kind') or 'internship'
+    out = []
+    for t in s.get('trackr') or ['uk-tech']:
+        t = str(t).strip('/ ')
+        out += [t] if '/' in t else [f'{t}/{tab}' for tab in TRACKR_TABS.get(kind, TRACKR_TABS['internship'])]
+    return list(dict.fromkeys(out))
+
+
+def _trackr_date(s):
+    try:
+        return time.strftime('%Y-%m-%d', time.strptime(s.strip(), '%d %b %y'))
+    except (ValueError, AttributeError):
+        return ''
+
+
+def _trackr_rows(ws, page, limit=40):
+    """Open one tracker page in the headless tab and return its rows, with every programme group expanded."""
+    ws.call('Page.navigate', {'url': f'{TRACKR}/{page}'})
+    ev = lambda js: ws.call('Runtime.evaluate', {'expression': js, 'returnByValue': True}).get('result', {}).get('value')
+    t0, last = time.time(), -1
+    while time.time() - t0 < limit:   # the table arrives after the page's own API call; wait until it stops growing
+        time.sleep(1)
+        n = ev('document.querySelectorAll("tbody tr").length') or 0
+        if n and n == last:
+            break
+        last = n
+    if ev(_TRACKR_EXPAND):
+        time.sleep(1.5)
+    return ev(_TRACKR_JS) or []
+
+
+def trackr(pages=None):
+    """Trackr's UK trackers (graduate schemes, internships, placements, spring weeks). The site only renders in a browser,
+    so this drives a private headless Chrome (its own throwaway profile, never the twin's) and reads each page once."""
+    import shutil
+    import socket
+    import subprocess
+    import tempfile
+    from . import render, twin
+    pages = pages or _trackr_pages()
+    if not pages:
+        return []
+    with socket.socket() as s:
+        s.bind(('127.0.0.1', 0))
+        port = s.getsockname()[1]
+    td = tempfile.mkdtemp(prefix='applytwin-trackr-')
+    p = subprocess.Popen([render.chrome(), '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+                          '--disable-extensions', '--disable-sync', '--use-mock-keychain', '--password-store=basic',
+                          f'--user-data-dir={td}', f'--remote-debugging-port={port}', '--remote-debugging-address=127.0.0.1',
+                          '--window-size=1400,2000', 'about:blank'],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, **store.NOWIN)
+    out, seen, today = [], set(), time.strftime('%Y-%m-%d')
+    try:
+        tab = None
+        for _ in range(120):
+            try:
+                tab = next(t for t in get(f'http://127.0.0.1:{port}/json/list', timeout=2) if t.get('type') == 'page')
+                break
+            except Exception:
+                time.sleep(0.25)
+        if not tab:
+            raise RuntimeError('headless Chrome did not start')
+        ws = twin._WS(tab['webSocketDebuggerUrl'], timeout=60)
+        try:
+            for page in pages:
+                tracker, _, tabname = page.partition('/')
+                label = f"Trackr {tracker.replace('-', ' ').title().replace('Uk ', 'UK ').replace('Us ', 'US ')}: " \
+                        f"{tabname.replace('-', ' ')}"
+                for r in _trackr_rows(ws, page):
+                    link, closes = r.get('apply') or '', _trackr_date(r.get('close') or '')
+                    if not link or not r.get('title') or not r.get('company'):
+                        continue   # not open yet: no application link to follow
+                    if closes and closes < today:
+                        continue
+                    key = (r.get('page') or link).rstrip('/').split('/programme/')[-1]
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    mats = {'CV': 'CV', 'CL': 'cover letter', 'WA': 'written answers'}
+                    m = ', '.join(mats.get(x.strip(), x.strip()) for x in re.split(r'\s+', r.get('materials') or '') if x.strip())
+                    desc = '\n'.join(x for x in (
+                        f"{label} ({r.get('sec') or 'other'})",
+                        f"Opens: {r['open']}" if r.get('open') else '',
+                        f"Closes: {r['close']}" if r.get('close') else 'Closes: rolling / not stated',
+                        f"Materials: {m}" if m else '',
+                        f"Sponsors visa: {r['visa']}" if r.get('visa') else '',
+                        f"Notes: {r['notes']}" if r.get('notes') else '',
+                        f"Trackr page: {r['page']}" if r.get('page') else '') if x)
+                    out.append(job('trackr', key, r['company'], r['title'], 'United Kingdom', link, link,
+                                   _trackr_date(r.get('open') or ''), desc, ats=detect_ats(link)))
+        finally:
+            ws.close()
+    finally:
+        store.kill_tree(p)
+        shutil.rmtree(td, ignore_errors=True)
+    return out
+
+
 # ------------------------------------------------------------------ more applicant tracking systems
 
 def workable(account):
@@ -576,7 +716,8 @@ def detect_ats(url):
                    ('successfactors', 'successfactors'), ('eightfold', 'eightfold.ai'), ('jobvite', 'jobvite.com'),
                    ('workable', 'workable.com'), ('recruitee', 'recruitee.com'), ('bamboohr', 'bamboohr.com'),
                    ('jazzhr', 'applytojob.com'), ('breezy', 'breezy.hr'), ('rippling', 'rippling.com'), ('dover', 'dover.com'),
-                   ('paylocity', 'paylocity.com'), ('ukg', 'ultipro.com'), ('adp', 'adp.com'), ('linkedin', 'linkedin.com')):
+                   ('paylocity', 'paylocity.com'), ('ukg', 'ultipro.com'), ('adp', 'adp.com'), ('linkedin', 'linkedin.com'),
+                   ('trackr', 'the-trackr.com')):   # Trackr's own applications (needs a Trackr account)
         if pat in (url or ''):
             return k
     return 'other'
@@ -585,8 +726,8 @@ def detect_ats(url):
 def scan(sources=None, on_progress=None, workers=32):
     """Run every enabled source in parallel, score each job against the profile, upsert into applytwin.db."""
     from . import match
-    sources = sources or ['community', 'tables', 'themuse', 'remote', 'hackernews', 'smartrecruiters', 'greenhouse', 'lever',
-                          'ashby', 'workday', 'workable', 'recruitee', 'amazon', 'microsoft']
+    sources = sources or ['community', 'tables', 'trackr', 'themuse', 'remote', 'hackernews', 'smartrecruiters', 'greenhouse',
+                          'lever', 'ashby', 'workday', 'workable', 'recruitee', 'amazon', 'microsoft']
     comp = store.companies()
     tasks = []
     kind = store.profile()['search'].get('kind', 'internship')
@@ -594,6 +735,8 @@ def scan(sources=None, on_progress=None, workers=32):
         tasks.append(('community', community, ()))
     if 'tables' in sources:
         tasks += [(f'tracker:{u.split("/")[3]}/{u.split("/")[4]}', lambda u=u: table_list(u), ()) for u in _lists()[1]]
+    if 'trackr' in sources and not os.environ.get('APPLYTWIN_NO_TWIN'):   # tests never start a browser
+        tasks.append(('trackr', trackr, ()))
     if 'themuse' in sources:
         tasks.append(('themuse', lambda k=kind: list(themuse(k)), ()))
     if 'remote' in sources and kind != 'internship':
@@ -640,7 +783,7 @@ def scan(sources=None, on_progress=None, workers=32):
                     if on_progress:
                         on_progress(dict(stats))
                     continue
-                if name == 'community' or name.startswith(('tracker:', 'hackernews')):
+                if name in ('community', 'trackr') or name.startswith(('tracker:', 'hackernews')):
                     # a tracker linked to a board we don't scan yet: read the whole board in this same scan
                     for ats_name, toks in discover(jobs).items():
                         for t in toks:
@@ -658,6 +801,10 @@ def scan(sources=None, on_progress=None, workers=32):
 def _retire(con, name, jobs):
     """Postings that disappeared from a company's own board are closed: they leave the queue instead of staying 'new'
     forever. Only after a successful fetch that returned jobs (an empty answer may be a hiccup)."""
+    if name == 'trackr' and jobs:   # gone from Trackr, or past its closing date (trackr() leaves those out)
+        seen = [j['id'] for j in jobs]
+        con.execute(f"update jobs set status='closed' where status='new' and source='trackr' and id not in ({','.join('?' * len(seen))})", seen)
+        return
     ats, _, token = name.partition(':')
     if not token or not jobs or ats not in ('greenhouse', 'lever', 'ashby', 'workday', 'smartrecruiters', 'workable', 'recruitee'):
         return
