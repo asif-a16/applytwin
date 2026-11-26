@@ -174,6 +174,10 @@ def best_template(field):
     p = prefs()
     if p['template_by_field'].get(field):
         return p['template_by_field'][field]
+    # a template the user picked in their profile beats the field's default (theirs was ignored: 'latex' came out 'classic')
+    mine = (store.profile().get('apply') or {}).get('template')
+    if mine and mine != store.DEFAULT_PROFILE['apply']['template']:
+        return mine
     o = outcomes()['by_template']
     ranked = sorted(((v['interviews'] / v['sent'], k) for k, v in o.items() if v['sent'] >= 8), reverse=True)
     return ranked[0][1] if ranked and ranked[0][0] > 0 else FIELD_RULES[field]['template']

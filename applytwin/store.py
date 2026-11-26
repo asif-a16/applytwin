@@ -58,6 +58,7 @@ DEFAULT_PROFILE = {   # nothing about the person is assumed: unanswered fields s
         "per_company_cap": 3,
         "tailor_every_resume": True,
         "template": "classic",
+        "latex_template": "",                       # path to your own LaTeX CV (an Overleaf main.tex): the 'latex' template uses its look
         "stop_on": ["password", "captcha", "arbitration", "essay>150 words", "assessment"],
         "email_codes": "notify",                    # notify = ping you; agent = your agent reads the code from your email
         "notify_desktop": True,
