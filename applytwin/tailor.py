@@ -180,9 +180,11 @@ def strength(b, kws=()):
             + (_kw_score(t, kws) if kws else 0) - (6 if weak(t) else 0))
 
 
-def _upgrade(bl, src, avoid, kws, least=1, taken=()):
+def _upgrade(bl, src, avoid, kws, least=1, taken=(), picked=()):
     """Swap each weak bullet for the entry's strongest unused one (a real, unchosen vault bullet), never adding length.
-    taken: vault indexes already on the page, reworded or not (a rewrite of bullet 0 plus bullet 0 itself is one fact twice)."""
+    taken: vault indexes already on the page, reworded or not (a rewrite of bullet 0 plus bullet 0 itself is one fact twice).
+    picked: lines the plan chose on purpose. Only filler replaces them, never a number alone: the bullet that mirrors
+    the posting must not lose its place to an off-topic line that merely contains a digit (a standard's name, a model)."""
     used = set(bl)
     spare = sorted((b for i, b in enumerate(src.get('bullets', [])) if b not in used and i not in taken and f"{src['id']}.{i}" not in avoid
                     and not weak(b) and not any(_closest([b], x)[1] > 0.5 for x in bl)),
@@ -192,7 +194,7 @@ def _upgrade(bl, src, avoid, kws, least=1, taken=()):
         t = ats.plain(b)
         if spare and weak(t) and strength(spare[0], kws) > strength(b, kws):
             out.append(spare.pop(0))
-        elif spare and not re.search(r'\d', t) and re.search(r'\d', ats.plain(spare[0])) and strength(spare[0], kws) >= strength(b, kws) + 3:
+        elif spare and b not in picked and not re.search(r'\d', t) and re.search(r'\d', ats.plain(spare[0])) and strength(spare[0], kws) >= strength(b, kws) + 3:
             out.append(spare.pop(0))   # the entry's measured result beats an unmeasured line
         else:
             out.append(b)
@@ -1012,6 +1014,7 @@ def apply(v, plan, jd=''):
             # them (the renderer trims to one page afterwards, so this never overflows)
             # a section of one entry with one line reads as an afterthought: that entry gets a second line too
             least = 2 if sec == 'experience' or len(chosen) == 1 else 1
+            picked = set(bl)   # before the top-up below: these the plan chose, the rest is filler
             for bi, b in enumerate(e.get('bullets', [])):
                 if len(bl) >= least:
                     break
@@ -1019,7 +1022,7 @@ def apply(v, plan, jd=''):
                     continue
                 if b not in bl and not any(_closest([b], x)[1] > 0.5 for x in bl):
                     bl.append(b)
-            e2['bullets'] = _one_per_fact(_upgrade(bl, e, avoid, kws, least, taken=used))
+            e2['bullets'] = _one_per_fact(_upgrade(bl, e, avoid, kws, least, taken=used, picked=picked))
             e2['_used'] = sorted(used | {i for i, b in enumerate(e.get('bullets', [])) if b in e2['bullets']})
             lst.append(e2)
         out[sec] = lst

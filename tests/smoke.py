@@ -181,6 +181,16 @@ _res7 = {"projects": [{"bullets": ["Merged **5 PRs** into kubernetes/kubectl, in
                                    "Reviewed pull requests and triaged open issues as part of SIG CLI."]}]}
 _w7 = _tl.trim_worth(_res7, _ats.keywords(_jd7), _jd7)
 res.append(ok(_w7(_res7["projects"][0]["bullets"][0]) > _w7(_res7["projects"][0]["bullets"][1]), 'trimming keeps measured results over keyword-only lines'))
+# a bullet the plan picked stays, even unmeasured, when the entry's only "measured" spare is off-topic; filler still upgrades
+_v7b = {"basics": {"name": "T"}, "projects": [{"id": "sim", "name": "Exchange Simulator", "bullets": [
+    "Built an open-source limit-order-book simulator with queue position, latency, fees and market impact.",
+    "Built a venue simulator with market, limit, IOC and post-only orders, auctions and halts, behind a pre-trade risk layer.",
+    "Modelled latency from physical geography using WGS84 sites, fibre and microwave routes and Karney geodesics."]}]}
+_r7b, _ = _tl.apply(_v7b, {"projects": [{"id": "sim", "bullets": ["sim.0", "sim.1"]}]},
+                    'Extend our exchange simulator to support market orders and time-in-force instructions.')
+_up7b = _tl._upgrade(["Did code reviews."], {"id": "x", "bullets": ["Did code reviews.", "Cut build time 40% by caching Docker layers."]}, set(), [])
+res.append(ok(_r7b["projects"][0]["bullets"] == _v7b["projects"][0]["bullets"][:2]
+              and _up7b == ["Cut build time 40% by caching Docker layers."], 'plan-chosen bullets are not swapped for a line with a digit'))
 # the headline can name the role in vault-backed words; a tool the posting names joins skills; coursework is trimmed to fit
 _v8 = {"basics": {"name": "T", "headline": ["NLP"]}, "education": [{"school": "U", "coursework": ["Organic Chemistry", "Process Control",
        "Biochemistry", "Transport Phenomena", "Lean Manufacturing", "Poetry", "Statistics for Engineers"]}],
