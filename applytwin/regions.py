@@ -796,6 +796,7 @@ def conventions(country=None, prof=None):
       photo     False: ApplyTwin never adds a photo (optional in parts of Europe; never needed to apply)
       gpa_label 'CGPA' in India (scale out of 10 shown as written), else 'GPA'
       date_fmt  how dates are written on forms ('DD/MM/YYYY' in the UK, Europe and India)
+      coursework the education line's label: 'Relevant modules' in the UK and Ireland, else 'Relevant coursework'
       extras    fields forms there sometimes ask for"""
     k = country_code(country) or country or home(prof)
     us = k in ('US', 'CA')
@@ -805,6 +806,7 @@ def conventions(country=None, prof=None):
         'gpa_label': 'CGPA' if india else 'GPA', 'gpa_scale': '10' if india else ('4.0' if us else ''),
         'date_fmt': 'MM/DD/YYYY' if k == 'US' else ('YYYY-MM-DD' if k in ('SE', 'CA') else 'DD/MM/YYYY'),
         'phone': DIAL.get(k, ''), 'currency': CURRENCY.get(k, ''),
+        'coursework': 'Relevant modules' if k in ('GB', 'IE') else 'Relevant coursework',
         'extras': (['10th and 12th marks', 'CGPA out of 10', 'notice period', 'current and expected CTC (LPA)'] if india else
                    ['right to work', 'notice period', 'expected salary in local currency', 'GDPR consent'] if k in EUROPE else []),
     }
@@ -821,6 +823,12 @@ def gpa_label(e):
     return 'Grade' if UK_CLASS.search(str(e.get('gpa') or '')) else 'GPA'
 
 
+def coursework_label(r):
+    """The label before an education entry's courses: what the tailored page set for the job's country, else the home
+    country's ('Relevant modules' for the UK, where nobody calls them coursework)."""
+    return (r or {}).get('coursework_label') or conventions()['coursework']
+
+
 def job_country(job):
     """The one country a posting is in, or None when it names none or several."""
     cs = countries((job or {}).get('location') or '')
@@ -833,6 +841,7 @@ def apply_conventions(res, job, prof=None):
     Content is never changed."""
     conv = conventions(job_country(job), prof)
     res['paper'] = conv['paper']
+    res['coursework_label'] = conv['coursework']
     if conv['gpa_label'] == 'CGPA':
         for e in res.get('education') or []:
             g = str(e.get('gpa') or '')

@@ -134,8 +134,6 @@ def check_rewrite(orig, new, vault_txt, jd, entry_txt=None):
     for link in re.findall(r'\]\(([^)]+)\)', orig):
         if link not in new:
             return 'dropped a link'
-    if re.search('[–—]', n) and not re.search('[–—]', o):
-        return 'adds dashes'
     return None
 
 
@@ -737,6 +735,9 @@ def _claude_stream(cmd, text, timeout, env, sink):
     return p.returncode == 0 and bool(reply.strip()), reply, err
 
 
+_NO_PERSIST = [True]   # Claude Code's --no-session-persistence; off for the session once a Claude turns it down
+
+
 def agent_llm(text, timeout=600, fast=False, think=True):
     """Run one prompt on the user's own Claude Code or Codex subscription (no API key). Returns the reply text or None.
     fast: a short checking job, so Claude uses its quickest model. think=False: no extended thinking (a resume plan is as
@@ -753,18 +754,32 @@ def agent_llm(text, timeout=600, fast=False, think=True):
             if name == 'claude':
                 # a one-shot plan doesn't need the biggest model; Sonnet is several times faster for this
                 base = [agents.exe('claude'), '-p', '--model', 'haiku' if fast else os.environ.get('APPLYTWIN_PLAN_MODEL', 'sonnet'), '--tools', '']
+                # a one-shot plan or check isn't a chat: unsaved, it stays out of the user's Claude Code history (and
+                # out of apps that import that history, such as the Codex app). An older Claude without the flag still runs.
+                if _NO_PERSIST[0]:
+                    base.append('--no-session-persistence')
                 env = {**os.environ, **({} if think else {'MAX_THINKING_TOKENS': '0'})}
                 sink = getattr(_SINK, 'fn', None)
-                if sink:   # a build is showing progress: stream, so the timer follows the reply as it's written
-                    ok, reply, err = _claude_stream(base, text, timeout, env, sink)
-                    if ok:
-                        return reply
-                    _llm_log('claude', type('R', (), {'returncode': 1, 'stderr': err, 'stdout': ''})())
-                    continue
-                r = _run(base + ['--output-format', 'text'], text, timeout, env)
-                if r.returncode == 0 and r.stdout.strip():
-                    return r.stdout
-                _llm_log('claude', r)
+                for _ in range(2):
+                    if sink:   # a build is showing progress: stream, so the timer follows the reply as it's written
+                        ok, reply, err = _claude_stream(base, text, timeout, env, sink)
+                        if ok:
+                            return reply
+                        _llm_log('claude', type('R', (), {'returncode': 1, 'stderr': err, 'stdout': ''})())
+                    else:
+                        r = _run(base + ['--output-format', 'text'], text, timeout, env)
+                        if r.returncode == 0 and r.stdout.strip():
+                            return r.stdout
+                        _llm_log('claude', r)
+                        err = (r.stderr or '') + (r.stdout or '')
+                    if '--no-session-persistence' not in base or 'no-session-persistence' not in (err or ''):
+                        break
+                    _NO_PERSIST[0] = False   # this Claude is older than the flag: run as before, saved
+                    base.remove('--no-session-persistence')
+                    timeout = _left(timeout)
+                    if not timeout:
+                        return None
+                continue
             else:
                 for _ in range(8):   # each refused model is remembered, so this walk happens once per machine
                     if not _left(timeout):

@@ -1684,7 +1684,7 @@ def help_prompt(text):
             f"Recent errors from their agent calls: {errs or 'none'}\n\n"
             f"The conversation so far:\n{convo}\n\n"
             "Do what their last message asks. Then answer with applytwin_reply('help', text): two or three plain sentences on "
-            "what you found and what you did, and anything they still need to do. Plain words, no em dashes, no markdown.")
+            "what you found and what you did, and anything they still need to do. Plain words, no em or en dashes, no markdown.")
 
 
 def message(job_id, text):
@@ -1750,7 +1750,7 @@ def job_answer_prompt(job_id, queued):
             "applytwin_get_profile). An Autopilot run is using the browser right now: don't open a browser, don't claim, "
             "apply or start a run. " + ("What they asked needs the browser, so it is queued and happens right after the current "
             "run; tell them that. " if queued else "") +
-            "Reply with applytwin_reply(job_id, text): one to three plain sentences, no markdown, no em dashes, never a file "
+            "Reply with applytwin_reply(job_id, text): one to three plain sentences, no markdown, no em or en dashes, never a file "
             "path (the resume opens from the link the app shows under your reply). Never invent facts.")
 
 

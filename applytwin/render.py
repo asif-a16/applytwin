@@ -13,7 +13,8 @@ import subprocess
 import sys
 import tempfile
 import time
-from .regions import gpa_label
+from .regions import coursework_label, gpa_label
+from .store import nodash
 
 
 def degree_line(e):
@@ -150,7 +151,7 @@ def clean(x, strict=False):
         return [clean(v, strict) for v in x]
     if not isinstance(x, str):
         return x
-    x = _INVISIBLE.sub('', ''.join(_LIGS.get(c, c) for c in x)).replace('\u00a0', ' ').replace('\u202f', ' ')
+    x = nodash(_INVISIBLE.sub('', ''.join(_LIGS.get(c, c) for c in x)).replace('\u00a0', ' ').replace('\u202f', ' '))
     return x.translate(_ASCII_QUOTES).strip() if strict else x
 
 
@@ -158,12 +159,12 @@ def md(s):
     s = html.escape(s or '', quote=False)
     s = re.sub(r'\[([^\]]+)\]\(([^)\s]+)\)', r'<a href="\2">\1</a>', s)
     s = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', s)
-    return s.replace('--', '\u2013') if False else s
+    return s
 
 
 def dates(e):
     a, b = (e.get('start') or '').strip(), (e.get('end') or '').strip()
-    return f'{a} \u2013 {b}' if a and b else (b or a)
+    return f'{a} - {b}' if a and b else (b or a)
 
 
 def _items(xs):
@@ -236,7 +237,7 @@ def _page(r, style, titles=None):
                 if long_line:
                     lines.append(gpa + (f' {dot} ' + md(f' {dot} '.join(e['honors'])) if e.get('honors') else ''))
                 if e.get('coursework'):
-                    lines.append('<b>Relevant coursework:</b> ' + _items(e['coursework']))
+                    lines.append(f'<b>{coursework_label(r)}:</b> ' + _items(e['coursework']))
                 if e.get('honors') and not long_line:
                     lines.append(md(f' {dot} '.join(e['honors'])))
                 body += [f'<div>{l}</div>' for l in lines]

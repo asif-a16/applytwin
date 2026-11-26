@@ -307,6 +307,15 @@ def profile():
 LIST_FIELDS = ('bullets', 'tech', 'alts', 'coursework', 'items', 'links', 'headline', 'honors')
 
 
+_DASHES = re.compile('[‒–—―]')
+
+
+def nodash(s):
+    """No en or em dashes anywhere the user's words go (their rule): each becomes a plain hyphen and keeps the spaces
+    around it, so "May 2026 – Present" reads "May 2026 - Present" and "Politis–White" reads "Politis-White"."""
+    return _DASHES.sub('-', s) if isinstance(s, str) else s
+
+
 def clean(x):
     """Resume data from any importer or model, made safe to render: null text becomes '', null lists become [], numbers
     (a GPA of 3.86) become text, and a list that arrived as one comma-separated string is split."""
@@ -330,7 +339,7 @@ def clean(x):
         return x
     if isinstance(x, (int, float)):
         return ('%.2f' % x).rstrip('0').rstrip('.') if isinstance(x, float) and x != int(x) else (('%.1f' % x) if isinstance(x, float) else str(x))
-    return x
+    return nodash(x)
 
 
 def resume():

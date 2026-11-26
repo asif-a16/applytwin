@@ -11,7 +11,7 @@ import re
 import shutil
 import subprocess
 import tempfile
-from .regions import gpa_label
+from .regions import coursework_label, gpa_label
 
 # what the body needs from any preamble, ours or the user's: symbols that a parser reads as the real character
 # (ActualText), links, the text-layer fixes, and a project heading that wraps instead of running off the page
@@ -129,6 +129,7 @@ def esc(s):
     # (only on the plain text between escapes: a command such as \atsym{20AC} must come through untouched)
     def plain(t):
         t = re.sub(r"(?<![\w.,)])'(?=\w)", '`', t)   # an opening quote ('Research to Trade') is `, else TeX sets ’
+        t = re.sub(r'-(?=-)', '-{}', t)   # '--' and '---' would be TeX's en and em dash: the user never wants either
         return re.sub(r'([AFKLPTVWY])(?=[A-Za-z])', r'\1{}', re.sub(r'f(?=[fil])', 'f{}', t))
     out, run = [], []
     for c in s or '':
@@ -164,7 +165,7 @@ def _bold(s):
 
 def dates(e):
     a, b = e.get('start', ''), e.get('end', '')
-    return esc(f'{a} -- {b}' if a and b else (b or a))
+    return esc(f'{a} - {b}' if a and b else (b or a))
 
 
 def user_template(path=None):
@@ -257,7 +258,7 @@ def build_tex(r, k=1.0, template=None):
                 body.append(r'\resumeSubheading{%s}{%s}{%s}{%s}' % (esc(e.get('school')), esc(e.get('location')), esc(deg), dates(e)))
                 # honors share one line (as in the HTML templates) instead of one bullet each
                 extra = ([r' $\cdot$ '.join(tex(h) for h in e['honors'])] if e.get('honors') else []) + \
-                        ([r'\textbf{Relevant coursework:} ' + esc(', '.join(e['coursework']))] if e.get('coursework') else [])
+                        ([r'\textbf{%s:} ' % esc(coursework_label(r)) + esc(', '.join(e['coursework']))] if e.get('coursework') else [])
                 if extra:
                     body += [r'\resumeItemListStart'] + [r'\resumeItem{%s}' % x for x in extra] + [r'\resumeItemListEnd']
             body.append(r'\resumeSubHeadingListEnd')
