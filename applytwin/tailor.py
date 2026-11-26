@@ -1843,7 +1843,8 @@ def _tailor(v, job, jd, mode, plan, style, out_dir, track, request=None):
                 os.remove(f)
     from . import latex
     with open(pdf[:-4] + '.tex', 'w', encoding='utf-8') as f:  # every tailored resume also ships as editable LaTeX
-        f.write(latex.build_tex(res))
+        # the page as printed: after any lines cut to fit (the untrimmed resume made a .tex that disagreed with the PDF)
+        f.write(latex.build_tex(r.get('resume') or res, r.get('scale', 1.0) if style == 'latex' else 1.0))
     txt = render.pdf_text(pdf)
     before = ats.report(v, jd)
     after = ats.report(res, jd, r['pages'], txt)

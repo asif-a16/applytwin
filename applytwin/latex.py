@@ -1,6 +1,10 @@
 """LaTeX output. Every tailored resume is also written as a .tex (Jake's Resume layout, the most common
 LaTeX resume on Overleaf) so LaTeX users get an editable source. If a TeX engine is installed
 (tectonic, lualatex, xelatex or pdflatex) the 'latex' template compiles the PDF with it.
+
+Users with their own Overleaf CV set profile.apply.latex_template to its main.tex: ApplyTwin then keeps everything
+above \\begin{document} (fonts, margins, headings, their \\resumeItem / \\resumeSubheading macros) and writes only the
+body, so the tailored PDF looks like the CV they made themselves.
 """
 import os
 import re
@@ -8,6 +12,24 @@ import shutil
 import subprocess
 import tempfile
 from .regions import gpa_label
+
+# what the body needs from any preamble, ours or the user's: symbols that a parser reads as the real character
+# (ActualText), links, the text-layer fixes, and a project heading that wraps instead of running off the page
+SUPPORT = r"""\usepackage{textcomp}
+\usepackage[gen]{eurosym}
+\usepackage{accsupp}
+\usepackage{calc}
+\usepackage{tabularx}
+\usepackage{enumitem}
+% a symbol drawn by TeX but read by a parser as its Unicode character (pdfLaTeX alone writes the euro sign as "C")
+\providecommand{\atsym}[2]{\BeginAccSupp{method=hex,unicode,ActualText=#1}#2\EndAccSupp{}}
+\providecommand{\atfs}{\ifdefined\pdffakespace\pdffakespace\fi}
+% a project's name, its stack and its date: the name wraps onto a second line rather than running past the margin
+\providecommand{\atProjectHeading}[2]{\item
+  \begin{tabularx}{0.97\textwidth}[t]{@{}>{\raggedright\arraybackslash}X@{\hspace{10pt}}r@{}}
+    \small#1 & #2 \\
+  \end{tabularx}\vspace{-7pt}}
+"""
 
 PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \usepackage[empty]{fullpage}
@@ -19,13 +41,15 @@ PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 % every link is underlined: a thin rule drawn just under the link text, so it adds no line height and leaves the text
 % (and the spaces around it, see \atfs) exactly as a parser reads it
 \newcommand{\lk}[1]{\rlap{\rule[-1.4pt]{\widthof{#1}}{0.4pt}}#1}
-\newcommand{\atfs}{\ifdefined\pdffakespace\pdffakespace\fi}
 \usepackage[english]{babel}
 \usepackage{tabularx}
 % cmap (before fontenc): a ToUnicode map for the T1 encoding, so the text layer reads real characters even when the T1
 % fonts are bitmap EC fonts (no cm-super installed), whose glyphs carry no names: the date dash came out as U+0015
 \usepackage{cmap}
 \usepackage[T1]{fontenc}
+% Bitstream Charter, the serif most Overleaf CVs switch to: outline (Type 1) fonts on every TeX install, so the page is
+% crisp and the text layer clean even where Computer Modern falls back to bitmaps
+\usepackage{charter}
 \ifdefined\pdfgentounicode\input{glyphtounicode}\fi  % pdfTeX only; tectonic/xelatex/lualatex skip it
 \pagestyle{empty}
 \addtolength{\oddsidemargin}{-0.5in}
@@ -39,7 +63,9 @@ PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \setlength{\tabcolsep}{0in}
 \titleformat{\section}{\vspace{-4pt}\scshape\raggedright\large}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
 \ifdefined\pdfgentounicode\pdfgentounicode=1\fi
-\ifdefined\pdfinterwordspaceon\pdfinterwordspaceon\fi  % pdfTeX: real space characters between words, so no parser glues "ms)by"
+% pdfTeX: real space characters between words, so no parser glues "ms)by". Built-in only: in a user's preamble with icon
+% fonts the fake spaces were drawn from the wrong font and shifted the header
+\ifdefined\pdfinterwordspaceon\pdfinterwordspaceon\fi
 \newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
 \newcommand{\resumeSubheading}[4]{\vspace{-2pt}\item
   \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
@@ -54,10 +80,40 @@ PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
 \newcommand{\resumeItemListStart}{\begin{itemize}}
 \newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+""" + SUPPORT
+
+# the user's own preamble gets SUPPORT plus anything a Jake-style body uses that their template may not define
+FALLBACK_MACROS = r"""\makeatletter
+\@ifpackageloaded{hyperref}{}{\usepackage[hidelinks]{hyperref}}
+\makeatother
+\providecommand{\lk}[1]{#1}
+\ifdefined\pdfgentounicode\input{glyphtounicode}\pdfgentounicode=1\fi
+\providecommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+\providecommand{\resumeSubheading}[4]{\vspace{-2pt}\item
+  \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\ \textit{\small#3} & \textit{\small #4} \\
+  \end{tabular*}\vspace{-7pt}}
+\providecommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\providecommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\providecommand{\resumeItemListStart}{\begin{itemize}}
+\providecommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
 """
 
-SPECIAL = {'&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#', '_': r'\_', '{': r'\{', '}': r'\}', '~': r'\textasciitilde{}',
-           '^': r'\textasciicircum{}', '\\': r'\textbackslash{}'}
+SPECIAL = {'&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#', '_': r'\_', '{': r'\{', '}': r'\}',
+           # '~2,000' means "about": a tilde on the line, not the raised accent \textasciitilde draws in Charter
+           '~': r'\atsym{007E}{\ensuremath{\sim}}',
+           '^': r'\textasciicircum{}', '\\': r'\textbackslash{}',
+           # characters pdfLaTeX can't set from UTF-8 (or sets from a font whose text layer reads wrong): drawn by TeX, read
+           # by a parser as the real character ('€73.8k' came out as '¿73.8k', '12×' as '12Ö')
+           '€': r'\atsym{20AC}{\euro}', '×': r'\texttimes{}', '±': r'\textpm{}', 'µ': r'\textmu{}', 'μ': r'\textmu{}',
+           '≥': r'\atsym{2265}{\ensuremath{\geq}}', '≤': r'\atsym{2264}{\ensuremath{\leq}}', '≠': r'\atsym{2260}{\ensuremath{\neq}}',
+           '≈': r'\atsym{2248}{\ensuremath{\approx}}', '∼': r'\atsym{223C}{\ensuremath{\sim}}', '→': r'\atsym{2192}{\ensuremath{\rightarrow}}',
+           '←': r'\atsym{2190}{\ensuremath{\leftarrow}}', '↔': r'\atsym{2194}{\ensuremath{\leftrightarrow}}',
+           '⇒': r'\atsym{21D2}{\ensuremath{\Rightarrow}}', '√': r'\atsym{221A}{\ensuremath{\surd}}', '∞': r'\atsym{221E}{\ensuremath{\infty}}',
+           '²': r'\atsym{00B2}{\textsuperscript{2}}', '³': r'\atsym{00B3}{\textsuperscript{3}}', '−': r'\atsym{2212}{\ensuremath{-}}'}
+for _n, _c in (('alpha', 'α'), ('beta', 'β'), ('gamma', 'γ'), ('delta', 'δ'), ('epsilon', 'ε'), ('theta', 'θ'), ('lambda', 'λ'),
+               ('pi', 'π'), ('rho', 'ρ'), ('sigma', 'σ'), ('tau', 'τ'), ('phi', 'φ'), ('omega', 'ω'), ('Delta', 'Δ'), ('Sigma', 'Σ')):
+    SPECIAL[_c] = r'\atsym{%04X}{\ensuremath{\%s}}' % (ord(_c), _n)
 
 
 def url(u):
@@ -70,8 +126,18 @@ def esc(s):
     # single U+FB0x characters, so 'efficient' wouldn't match a parser's keyword search
     # A{}w, T{}o: the same empty group stops the big kerns after these capitals, which PDF text extractors read as a word
     # gap ("PyT orch", "W orkshop", "A w ards"), so a keyword or a section heading went missing
-    s = re.sub(r'f(?=[fil])', 'f{}', ''.join(SPECIAL.get(c, c) for c in (s or '')))
-    return re.sub(r'([AFKLPTVWY])(?=[A-Za-z])', r'\1{}', s)
+    # (only on the plain text between escapes: a command such as \atsym{20AC} must come through untouched)
+    def plain(t):
+        t = re.sub(r"(?<![\w.,)])'(?=\w)", '`', t)   # an opening quote ('Research to Trade') is `, else TeX sets ’
+        return re.sub(r'([AFKLPTVWY])(?=[A-Za-z])', r'\1{}', re.sub(r'f(?=[fil])', 'f{}', t))
+    out, run = [], []
+    for c in s or '':
+        if c in SPECIAL:
+            out += [plain(''.join(run)), SPECIAL[c]]
+            run = []
+        else:
+            run.append(c)
+    return ''.join(out) + plain(''.join(run))
 
 
 def heading(s):
@@ -101,18 +167,78 @@ def dates(e):
     return esc(f'{a} -- {b}' if a and b else (b or a))
 
 
-def build_tex(r, k=1.0):
+def user_template(path=None):
+    """The preamble of the user's own LaTeX CV (profile.apply.latex_template, a main.tex from Overleaf), or None."""
+    if path is None:
+        try:
+            from . import store
+            path = (store.profile().get('apply') or {}).get('latex_template') or ''
+        except Exception:
+            path = ''
+    path = os.path.expanduser(os.path.expandvars(str(path or '').strip().strip('"')))
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        src = open(path, encoding='utf-8', errors='replace').read()
+    except OSError:
+        return None
+    i = src.find(r'\begin{document}')
+    pre = src[:i] if i > 0 else ''
+    return pre if re.search(r'\\documentclass', pre) else None
+
+
+def _own_preamble(pre, k, a4):
+    """The user's preamble, sized and papered for this page, with what ApplyTwin's body and a clean text layer need."""
+    m = re.search(r'\\documentclass(\[[^\]]*\])?\{([^}]*)\}', pre)
+    opts = [o.strip() for o in (m.group(1) or '[]')[1:-1].split(',') if o.strip()]
+    opts = [o for o in opts if o not in ('letterpaper', 'a4paper')] + ['a4paper' if a4 else 'letterpaper']
+    if k < 0.99:   # one size smaller to fit the page, as the built-in template does (extarticle also has 9pt)
+        steps = ['12pt', '11pt', '10pt'] + (['9pt'] if m.group(2).strip().startswith('ext') else [])
+        opts = [steps[min(steps.index(o) + 1, len(steps) - 1)] if o in steps else o for o in opts]
+    cls = r'\documentclass[%s]{%s}' % (','.join(opts), m.group(2))
+    pre = pre[:m.start()] + cls + ('' if 'cmap' in pre else '\n\\usepackage{cmap}') + pre[m.end():]
+    pre = pre.rstrip() + '\n% ---- added by ApplyTwin: links, symbols and a text layer every application system can read ----\n'
+    pre += SUPPORT + FALLBACK_MACROS
+    if k < 0.93:
+        pre += '\\setlist{itemsep=-1pt}\n'
+    return pre
+
+
+ICONS = (('phone', 'phone'), ('email', 'envelope'), ('location', 'map-marker-alt'), ('status', None))
+
+
+def _link_icon(u):
+    u = (u or '').lower()
+    return 'github' if 'github.' in u else 'linkedin' if 'linkedin.' in u else 'gitlab' if 'gitlab.' in u else 'globe'
+
+
+def build_tex(r, k=1.0, template=None):
+    """The resume as LaTeX. template: the user's own preamble (see user_template), read from the profile when not given;
+    '' forces the built-in one."""
     from .render import clean
+    from .regions import a4
     r = clean(r)   # pasted ligature glyphs, soft hyphens and zero-width spaces out of the text
+    own = user_template() if template is None else (user_template(template) if template else None)
+    icons = bool(own and re.search(r'\\usepackage(\[[^\]]*\])?\{fontawesome5?\}', own))
     b = r.get('basics', {})
-    contact = [esc(x) for x in (b.get('phone'), b.get('email'), b.get('location'), b.get('status')) if x]
+
+    def item(kind, text):
+        return (r'\mbox{\faIcon{%s}}\ ' % kind if icons and kind else '') + text
+    contact = []
+    for key, icon in ICONS:
+        if b.get(key):
+            x = esc(b[key])
+            if key == 'email':
+                x = r'\href{mailto:%s}{\lk{%s}}' % (url(b[key]), x)
+            contact.append(item(icon, x))
     for l in b.get('links', []):
         label = l.get('label') or re.sub(r'^https?://(www\.)?', '', l.get('url', '')).rstrip('/')
-        contact.append(r'\href{%s}{\lk{%s}}' % (url(l.get('url', '')), esc(label)))
-    body = [r'\begin{center}', r'\textbf{\Huge \scshape %s} \\ \vspace{1pt}' % esc(b.get('name', ''))]
-    if b.get('headline'):
+        contact.append(item(_link_icon(l.get('url') or label), r'\href{%s}{\lk{%s}}' % (url(l.get('url', '')), esc(label))))
+    body = [r'\begin{center}', r'\textbf{\Huge \scshape %s} \\ \vspace{%s}' % (esc(b.get('name', '')), '8pt' if own else '1pt')]
+    if b.get('headline') and not own:   # the user's own header has no tag line: theirs is name and contact only
         body.append(r'\small %s \\ \vspace{1pt}' % r' $\cdot$ '.join(tex(h) for h in b['headline']))
-    body += [r'\small ' + r' $|$ '.join(contact), r'\end{center}']
+    # the user's header is normal size for a few items; more than three set small, so the line doesn't wrap
+    body += [('' if own and len(contact) <= 3 else r'\small ') + r' $|$ '.join(contact), r'\end{center}']
     for sec in r.get('order') or []:
         data = r.get(sec)
         if not data:
@@ -138,18 +264,25 @@ def build_tex(r, k=1.0):
         elif sec in ('experience', 'leadership', 'volunteering'):
             body.append(r'\resumeSubHeadingListStart')
             for e in data:
+                # Jake's order: the role in bold on the first line, the organisation in italics under it
                 org = tex(e.get('org', '')) if not e.get('url') else r'\href{%s}{\lk{%s}}' % (url(e['url']), tex(e.get('org', '')))
-                role = tex(e.get('title', '')) + ((r' $|$ ' + esc(', '.join(e['stack']))) if e.get('stack') else '')
-                body.append(r'\resumeSubheading{%s}{%s}{%s}{%s}' % (org, dates(e), role, esc(e.get('location', ''))))
+                role = tex(e.get('title', '')) + ((r'\textmd{ $|$ %s}' % esc(', '.join(e['stack']))) if e.get('stack') else '')
+                body.append(r'\resumeSubheading{%s}{%s}{%s}{%s}' % (role or org, dates(e), org if role else '', esc(e.get('location', ''))))
                 if e.get('bullets'):
                     body += [r'\resumeItemListStart'] + [r'\resumeItem{%s}' % tex(x) for x in e['bullets']] + [r'\resumeItemListEnd']
             body.append(r'\resumeSubHeadingListEnd')
         elif sec == 'projects':
             body.append(r'\resumeSubHeadingListStart')
             for p in data:
-                nm = r'\textbf{%s}' % tex(p.get('name', ''))
-                tag = ' $|$ '.join(x for x in (tex(p.get('tagline', '')), esc(', '.join(p.get('tech', [])))) if x)
-                body.append(r'\resumeProjectHeading{%s%s}{%s}' % (nm, (r' $|$ \emph{%s}' % tag) if tag else '', esc(p.get('date', ''))))
+                # "**Name** (stack, kind)": a name that carries its own brackets keeps them, unbolded; otherwise the first
+                # few tools. The tagline and the full tech list stay in the vault: on the page they ran to four lines.
+                name = (p.get('name') or '').strip()
+                m = re.match(r'^(.*\S)\s*(\([^()]*\))$', name)
+                nm, paren = (m.group(1), m.group(2)) if m else (name, '(%s)' % ', '.join(p['tech'][:4]) if p.get('tech') else '')
+                nm = r'\textbf{%s}' % tex(nm)
+                if p.get('url'):
+                    nm = r'\href{%s}{\lk{%s}}' % (url(p['url']), nm)
+                body.append(r'\atProjectHeading{%s%s}{%s}' % (nm, (' ' + esc(paren)) if paren else '', esc(p.get('date', ''))))
                 if p.get('bullets'):
                     body += [r'\resumeItemListStart'] + [r'\resumeItem{%s}' % tex(x) for x in p['bullets']] + [r'\resumeItemListEnd']
             body.append(r'\resumeSubHeadingListEnd')
@@ -171,18 +304,23 @@ def build_tex(r, k=1.0):
             body.append(r'\end{itemize}\vspace{-4pt}')
     # \small and the headings are relative to the class size, so shrink by changing the class size (11pt -> 10pt), and at
     # the last step also tighten the space between items
-    pre = PREAMBLE if k >= 0.99 else PREAMBLE.replace('[letterpaper,11pt]', '[letterpaper,10pt]')
-    from .regions import a4
-    if a4(r.get('paper')):   # A4 by default; Letter only for US and Canadian jobs (regions.conventions)
-        pre = pre.replace('letterpaper', 'a4paper')
-    if k < 0.93:
-        pre += '\n\\setlist{itemsep=-1pt}\n'
+    # A4 by default; Letter only for US and Canadian jobs (regions.conventions)
+    if own:
+        pre = _own_preamble(own, k, a4(r.get('paper')))
+    else:
+        pre = PREAMBLE if k >= 0.99 else PREAMBLE.replace('[letterpaper,11pt]', '[letterpaper,10pt]')
+        if a4(r.get('paper')):
+            pre = pre.replace('letterpaper', 'a4paper')
+        if k < 0.93:
+            pre += '\n\\setlist{itemsep=-1pt}\n'
     doc = '\n'.join(body)
     # pdfTeX drops the word space next to a boxed underline from the text layer ("prototypeand"): put a real space
     # character back on each side of a link that sits between words
-    lk = r'\\href\{[^{}]*\}\{\\lk\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}\}'
-    doc = re.sub(r'(?<= )(' + lk + ')', r'\\atfs{}\1', doc)
-    doc = re.sub('(' + lk + r')(?= )', r'\1\\atfs{}', doc)
+    # (only for the built-in underline: the user's plain links need no help, and there the fake space shifted the text)
+    if not own:
+        lk = r'\\href\{[^{}]*\}\{\\lk\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}\}'
+        doc = re.sub(r'(?<= )(' + lk + ')', r'\\atfs{}\1', doc)
+        doc = re.sub('(' + lk + r')(?= )', r'\1\\atfs{}', doc)
     return pre + '\n\\begin{document}\n' + doc + '\n\\end{document}\n'
 
 
