@@ -488,7 +488,11 @@ def not_applyable(job, prof=None):
         return ''
     if blockers.homepage_link(job.get('apply_url') or job.get('url')):
         return 'Broken link: listing points to the company homepage, not the job posting.'
-    k = match.quick_knockouts(job, prof or store.profile())
+    prof = prof or store.profile()
+    old = match.too_old(job, prof)   # search.max_age_days: held back, not logged, so raising the limit brings them back
+    if old:
+        return old
+    k = match.quick_knockouts(job, prof)
     return k[0] if k else ''
 
 

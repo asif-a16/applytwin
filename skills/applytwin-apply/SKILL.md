@@ -73,7 +73,8 @@ themselves on a careful day.
 
 ## What ApplyTwin sorts out for you
 - `applytwin_next_jobs` never hands you homepage-only links, clear title/location knockouts, jobs waiting for a page-error
-  retry, or jobs on a site that is waiting for the user's sign-in (`waiting_on_you`).
+  retry, jobs on a site that is waiting for the user's sign-in (`waiting_on_you`), or, when `search.max_age_days` is set,
+  jobs posted longer ago than that or with no posting date. Don't pick those from `applytwin_list_jobs` instead.
 - Logging Needs User for a closed posting, a homepage link or a duplicate files it as Skipped. A page error or timeout
   (not on the submit step) goes back to the queue once (`requeued: true`). `stop: true` in any result = end the run.
 
