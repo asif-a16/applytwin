@@ -117,7 +117,7 @@ _before = any(r['job_id'] == 'pend1' for r in api.pending_jobs())
 api.skip_job('pend1')
 res.append(ok(_before and not any(r['job_id'] == 'pend1' for r in api.pending_jobs()), 'dismissing a job that needs you clears it'))
 _w = [_an.match(x, _bank) for x in ('Please tell us what interested you to apply to CFS', 'Anything else we should know?', 'How did you hear about us?')]
-res.append(ok(_w[0].get('action') == 'write' and _w[1].get('action') == 'write' and _w[2].get('action') != 'write' and 'em dash' in _w[0]['how'],
+res.append(ok(_w[0].get('action') == 'write' and _w[1].get('action') == 'write' and _w[2].get('action') != 'write' and 'em or en dashes' in _w[0]['how'],
               'open-ended questions get written for each job, facts still come from your answers'))
 # a plan that numbers bullets from 1 (what models naturally do) must not shift or drop bullets on everyone's resumes
 from applytwin import tailor as _tl
@@ -1497,6 +1497,27 @@ api.update_profile({**_pt, 'apply': {**_pt['apply'], 'template': 'latex'}})
 _bt = _lrn.best_template('software')
 api.update_profile(_pt)
 res.append(ok(_bt == 'latex' and _lrn.best_template('software') == 'classic', f'your profile template is used ({_bt})'))
+
+# no en or em dash ever reaches a page or a typed answer: vault text, date ranges and TeX's -- / --- all come out as hyphens
+from applytwin import latex as _lx, render as _rd
+_dr = {'start': 'May 2026', 'end': 'Present'}
+_dt = _rd.clean({'bullets': ['Politis–White bootstrap — fast', 'May 2026 – Present']})
+_tex = _lx.build_tex(_rd.clean({**store.resume(), 'experience': [{'org': 'A–B', 'title': 'Intern', 'start': 'May 2026', 'end': 'Present',
+                                                                   'bullets': ['Cut latency 3--5x — measured---twice']}]}), template='')
+_ans = _an._finish({'question': 'Anything else?', 'answer': 'Yes — I can start in June'}, [], None, {})
+res.append(ok(not any(c in str(_dt) + _tex + _ans['answer'] + _rd.dates(_dr) + _lx.dates(_dr) for c in '–—')
+              and '--' not in _tex.split(r'\begin{document}')[1] and _rd.dates(_dr) == 'May 2026 - Present'
+              and store.clean({'name': 'x–y'})['name'] == 'x-y' and _ans['answer'] == 'Yes - I can start in June',
+              'no en or em dashes on any page or in typed answers'))
+
+# UK and Irish pages say "Relevant modules"; US (and other) pages keep "Relevant coursework"
+from applytwin import regions as _rg
+_cw = {**store.resume(), 'education': [{'school': 'Imperial College London', 'degree': 'MEng', 'coursework': ['Networked Systems']}]}
+_uk, _us = dict(_cw), dict(_cw)
+_rg.apply_conventions(_uk, {'location': 'London, UK'}); _rg.apply_conventions(_us, {'location': 'New York, NY'})
+res.append(ok(r'\textbf{Relevant modules:}' in _lx.build_tex(_uk, template='') and r'\textbf{Relevant coursework:}' in _lx.build_tex(_us, template='')
+              and 'Relevant modules:' in _rd.build_html(_cw) and _rg.conventions('IE')['coursework'] == 'Relevant modules',
+              'coursework is "Relevant modules" in the UK and Ireland, "Relevant coursework" elsewhere'))
 _css = render.CSS if hasattr(render, 'CSS') else open(os.path.join(ROOT, 'applytwin', 'render.py'), encoding='utf-8').read()
 res.append(ok('text-decoration: underline' in _css and 'text-underline-offset' in _css, 'html templates underline every link'))
 _pkg = json.dumps({'dependencies': {'react': '1', 'next': '1', 'clsx': '1', '@aws-sdk/client-s3': '1'}, 'devDependencies': {'vitest': '1'}})

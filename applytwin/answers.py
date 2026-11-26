@@ -9,6 +9,7 @@ import time
 
 from . import blockers
 from . import regions
+from .store import nodash
 
 STOP = set('a an the of to for in on and or is are you your do does did be been have has with at by as this that '
            'will would can could please any if from our we us it its which what when where who how'.split())
@@ -226,7 +227,7 @@ WRITE_RULES = (
     "2-4 sentences and under 90 words unless the form asks for more; stay under any character limit. First person, plain words, "
     "the way a sharp student writes in five minutes. Name one specific thing about this company or role from the posting and tie "
     "it to one real thing the user did, with its real numbers. Do not restate the question, do not open with 'I am excited', "
-    "'passionate' or 'thrilled', no 'not only X but Y' or 'it's not X, it's Y', no em dashes, no list of three, no closing line "
+    "'passionate' or 'thrilled', no 'not only X but Y' or 'it's not X, it's Y', no em or en dashes, no list of three, no closing line "
     "that sums up, no buzzwords (leverage, cutting-edge, innovative, synergy, dynamic, journey, impactful). Never invent "
     "experience, interests or facts. Do not save it with applytwin_save_answer: it is specific to this company.")
 
@@ -304,6 +305,8 @@ def _finish(r, bank, options, ctx):
         f = date_formats(vals.get('grad') if k == 'grad_year' else r['answer'])
         if f:
             r['formats'] = f
+    if not options and isinstance(r.get('answer'), str):
+        r['answer'] = nodash(r['answer'])   # typed text never carries an en or em dash; a listed option is kept exactly
     return r
 
 

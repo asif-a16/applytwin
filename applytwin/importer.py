@@ -134,7 +134,7 @@ def tex_to_text(s):
     s = re.sub(r'\\textbf\{([^}]*)\}', r'**\1**', s)
     s = re.sub(r'\\(?:textit|emph|underline|small|large|Large|Huge|scshape)\{?([^}]*)\}?', r'\1', s)
     s = re.sub(r'\\[a-zA-Z]+\*?(\[[^\]]*\])?', ' ', s).replace('{', '').replace('}', '').replace('\\\\', '\n').replace('$|$', '|')
-    s = s.replace('\\&', '&').replace('\\%', '%').replace('\\$', '$').replace('\\#', '#').replace('\\_', '_').replace('--', '–')
+    s = s.replace('\\&', '&').replace('\\%', '%').replace('\\$', '$').replace('\\#', '#').replace('\\_', '_').replace('---', '-').replace('--', '-')
     return re.sub(r'[ \t]+', ' ', s)
 
 
