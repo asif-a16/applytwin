@@ -66,10 +66,10 @@ export function HowItWorks() {
       <Step n="01" title="Finds the roles." text="It checks more than 600 company career sites and the student-run internship lists, and keeps only what fits your field, your cycle and your cities.">
         {p => <Sift p={p} />}
       </Step>
-      <Step flip n="02" title="A new resume for every job." text="Your strongest experience, reordered and rewritten in each posting's language, fitted to one clean page. Your numbers, titles and employers never change.">
+      <Step flip n="02" title="A new CV for every job." text="Your strongest experience, reordered and rewritten in each posting's language, fitted to one clean page. Your numbers, titles and employers never change.">
         {p => <Turn p={p} />}
       </Step>
-      <Step n="03" title="Fills the whole form." text="Work authorization, graduation date, address, even the short essays. You answer once during setup. It answers everywhere after that.">
+      <Step n="03" title="Fills the whole form." text="Right to work, graduation date, address, even the short essays. You answer once during setup. It answers everywhere after that.">
         {p => <Fill p={p} />}
       </Step>
       <Step flip n="04" title="Asks only when it has to." text="A sign-in, an emailed code, a question only you can answer. It pings you, moves on to the next job, and comes back when you're done.">
@@ -192,7 +192,7 @@ function Turn({ p }) {
 
 /* 03. The application, in its browser window: it turns toward you and straightens, then the answers type themselves in
    while the scene sits in the middle of the screen, and the pointer moves from field to field and ends on Review. */
-const FIELDS = [['Are you authorized to work in the US?', 'Yes'], ['Expected graduation', 'May 2028'], ['Street address', '1 University Ave, Gainesville, FL'],
+const FIELDS = [['Do you have the right to work in the UK?', 'Yes'], ['Expected graduation', 'June 2028'], ['Street address', '12 Oxford Road, Manchester'],
   ['What interests you about NVIDIA?', 'Your GPU kernels team ships the code I profile every day in my lab, and I want to help write it.']]
 const TOTAL = FIELDS.reduce((n, [, a]) => n + a.length, 0)
 function Fill({ p }) {
@@ -282,7 +282,7 @@ function Ping({ p }) {
             <div className="mt-2 flex items-center gap-2 text-[12.5px] text-white/60"><Avatar name="Figma" domain="figma.com" size={18} /><span className="truncate">Figma · Software Engineer Intern</span></div>
             <div className="mt-4 h-[4px] overflow-hidden rounded-full bg-white/[.08]"><div className="h-full rounded-full transition-colors duration-500" style={{ width: `${fill * 100}%`, background: sent ? '#30d158' : '#0a84ff' }} /></div>
             <div className="mt-5 space-y-2.5">
-              {[['Work authorization', 0.3], ['Graduation date', 0.55], ['Why Figma?', 0.85]].map(([l, at]) => (
+              {[['Right to work', 0.3], ['Graduation date', 0.55], ['Why Figma?', 0.85]].map(([l, at]) => (
                 <div key={l} className="flex items-center gap-2 rounded-[8px] bg-white/[.05] px-3 py-2 text-[12px]">
                   <span className="grid size-4 place-items-center rounded-full transition-colors duration-500" style={{ background: fill > at ? '#30d158' : 'rgb(255 255 255 / .12)' }}>
                     <Check className="size-2.5 text-black" strokeWidth={3.5} style={{ opacity: fill > at ? 1 : 0 }} /></span>

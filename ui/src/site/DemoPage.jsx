@@ -6,7 +6,7 @@ import { InstallBox, useTheme } from './Site'
 import './site.css'
 
 /* apply.twinly.tech/demo: ApplyTwin without installing anything, on any phone. A made-up student and three made-up
-   postings, but the resumes are real: scripts/demo/make_demo.py ran ApplyTwin's own tailor to make every rewrite, score
+   postings, but the CVs are real: scripts/demo/make_demo.py ran ApplyTwin's own tailor to make every rewrite, score
    and page shown here. The application run is a replay of what the app does, and says so. */
 
 const EASE = [0.25, 0.1, 0.25, 1]
@@ -59,8 +59,8 @@ export default function DemoPage() {
         <div className="mx-auto max-w-[900px] text-center">
           <h1 className="display-xl text-[clamp(40px,7vw,88px)] [text-wrap:balance]">See it work.<br /><span className="muted">No install.</span></h1>
           <p className="mx-auto mt-6 max-w-[620px] text-[18px] leading-[1.45] [text-wrap:balance] sm:text-[20px]">
-            Meet Maya, a sample computer science sophomore. Pick a posting and watch ApplyTwin rewrite her resume for it, then apply.
-            <span className="muted"> The resumes below are real output from the app. The student and companies are made up.</span>
+            Meet Maya, a sample computer science sophomore. Pick a posting and watch ApplyTwin rewrite her CV for it, then apply.
+            <span className="muted"> The CVs below are real output from the app. The student and companies are made up.</span>
           </p>
         </div>
       </section>
@@ -90,13 +90,13 @@ export default function DemoPage() {
 
         <section className="px-4 pt-16 sm:pt-24">
           <div className="mx-auto max-w-[900px]">
-            <Step n="2" title="It rewrites her resume for that job." sub="Same facts in the posting's words. Numbers, titles and employers never change." />
+            <Step n="2" title="It rewrites her CV for that job." sub="Same facts in the posting's words. Numbers, titles and employers never change." />
             {/* no exit animation to wait for: the new posting's content is there at once, even on a slow phone */}
             <div>
               <motion.div key={job.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: EASE }}>
                 <div className="mt-6 grid grid-cols-2 gap-3">
-                  <Stat label="Resume score for this posting, her usual resume" value={<>{job.score_before}</>} dim />
-                  <Stat label="Resume score, rewritten for this posting" value={<Count from={job.score_before} to={job.score_after} />} />
+                  <Stat label="CV score for this posting, her usual CV" value={<>{job.score_before}</>} dim />
+                  <Stat label="CV score, rewritten for this posting" value={<Count from={job.score_before} to={job.score_after} />} />
                 </div>
                 {job.positioning && <p className="mt-4 rounded-[18px] bg-[var(--bg-2)] p-4 text-[15px] leading-relaxed ring-1 ring-[var(--line)]">
                   <span className="muted">How it pitches her: </span>{job.positioning}</p>}
@@ -115,7 +115,7 @@ export default function DemoPage() {
 
         <section className="px-4 pt-16 sm:pt-24">
           <div className="mx-auto max-w-[900px]">
-            <Step n="3" title="One clean page, made for this posting." sub="The exact resume it would upload, filled to the bottom margin." />
+            <Step n="3" title="One clean page, made for this posting." sub="The exact CV it would upload, filled to the bottom margin." />
             <Pages before={A + 'master.png'} after={A + job.page} company={job.company} />
           </div>
         </section>
@@ -181,12 +181,12 @@ function Pages({ before, after, company }) {
   return (
     <div className="mt-6">
       <div className="mx-auto mb-4 flex w-fit rounded-full bg-[var(--bg-2)] p-[3px] text-[13px] ring-1 ring-[var(--line)]" role="tablist">
-        {[['before', 'Her usual resume'], ['after', `For ${company}`]].map(([k, l]) => (
+        {[['before', 'Her usual CV'], ['after', `For ${company}`]].map(([k, l]) => (
           <button key={k} role="tab" aria-selected={show === k} onClick={() => setShow(k)}
             className={'rounded-full px-4 py-1.5 transition ' + (show === k ? 'bg-[var(--bg-3)] font-semibold shadow-sm' : 'muted')}>{l}</button>))}
       </div>
       <div className="mx-auto max-w-[620px] overflow-hidden rounded-[10px] bg-white shadow-[var(--shadow)] ring-1 ring-[var(--line)]">
-        <motion.img key={show + after} src={show === 'after' ? after : before} alt={show === 'after' ? `Maya's resume rewritten for ${company}` : "Maya's usual resume"}
+        <motion.img key={show + after} src={show === 'after' ? after : before} alt={show === 'after' ? `Maya's CV rewritten for ${company}` : "Maya's usual CV"}
           initial={{ opacity: 0.4 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="block w-full" />
       </div>
     </div>)
@@ -197,8 +197,8 @@ function Run({ job }) {
   const ref = useRef(null)
   const seen = useInView(ref, { margin: '-80px' })
   const rows = [
-    { company: job.company, title: job.title, end: 'Ready for your Submit click', icon: Send, steps: ['Opening the application', 'Filling contact details and education', 'Uploading the resume made for it', 'Answering 7 questions from her saved answers'] },
-    { company: 'Brightline Labs', title: 'Software Engineer Intern', end: 'Submitted', icon: Check, steps: ['Opening the application', 'Filling the form', 'Uploading a new resume for it'] },
+    { company: job.company, title: job.title, end: 'Ready for your Submit click', icon: Send, steps: ['Opening the application', 'Filling contact details and education', 'Uploading the CV made for it', 'Answering 7 questions from her saved answers'] },
+    { company: 'Brightline Labs', title: 'Software Engineer Intern', end: 'Submitted', icon: Check, steps: ['Opening the application', 'Filling the form', 'Uploading a new CV for it'] },
     { company: 'Lumen Bank', title: 'Technology Analyst Intern', end: 'Waiting on your sign-in', icon: KeyRound, steps: ['Opening the application', 'Workday asks for an account'] },
     { company: 'Redwood Systems', title: 'Backend Intern', end: 'Skipped: posting closed', icon: CircleSlash, steps: ['Opening the application'] },
   ]

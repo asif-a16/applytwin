@@ -4,15 +4,15 @@ Distilled from the r/cscareerquestions wiki, Harvard OCS and MIT CAPD guides, Go
 interviews, and how Greenhouse / Lever / Workday / iCIMS / Ashby actually parse and search resumes. ApplyTwin's
 tailoring prompt, fact guard and ATS lint all follow these rules.
 
-## What a recruiter does with your resume
+## What a recruiter does with your CV
 1. **6 to 10 seconds on the first pass.** They read the top third: name, school and grad date, the first two roles,
    and anything bold. If nothing there matches the posting, they stop.
-2. **Keyword search inside the ATS.** Recruiters filter by knockout answers (work authorization, sponsorship,
-   graduation date, location), then search candidates for terms like `"React" AND "AWS"`. A resume without the
+2. **Keyword search inside the ATS.** Recruiters filter by knockout answers (right to work, sponsorship,
+   graduation date, location), then search candidates for terms like `"React" AND "AWS"`. A CV without the
    posting's hard skills does not show up, however good it is.
 3. **The deep read happens after the screen.** That is when depth, links and projects get you the interview.
 
-So the resume has to (a) parse cleanly, (b) contain the posting's exact hard-skill terms, in context, and
+So the CV has to (a) parse cleanly, (b) contain the posting's exact hard-skill terms, in context, and
 (c) put the strongest, most relevant evidence in the first third.
 
 ## Structure
@@ -26,15 +26,16 @@ So the resume has to (a) parse cleanly, (b) contain the posting's exact hard-ski
 - **Headings:** standard names only (Education, Experience, Projects, Skills, Research, Leadership, Awards). Parsers
   key on them.
 - **Dates:** one format everywhere (`Jun 2025 – Aug 2025`, `Present`), right-aligned.
-- **Education:** degree, major, expected graduation month and year. Include GPA if it is 3.3 or higher. Coursework
-  only while it is your strongest signal (freshman and sophomore year).
+- **Education:** degree, subject, expected graduation month and year, and the classification (predicted or achieved,
+  e.g. "predicted First" or "2:1"). A-level grades on one line under your school if there is room. For US jobs, GPA
+  if it is 3.3 or higher. Modules only while they are your strongest signal (first and second year).
 
 ## Bullets: the part that gets interviews
 - **XYZ formula:** *Accomplished [X], as measured by [Y], by doing [Z].* Lead with the result, then how.
   - Weak: "Worked on the backend for the payments team."
   - Strong: "Cut checkout p99 latency 38% (410 to 255 ms) by moving fraud scoring to an async Kafka consumer."
 - **Start with a strong past-tense verb** (present tense only for a current role): Built, Shipped, Designed,
-  Architected, Automated, Reduced, Scaled, Optimized, Led, Launched, Debugged, Benchmarked, Modeled, Deployed.
+  Architected, Automated, Reduced, Scaled, Optimised, Led, Launched, Debugged, Benchmarked, Modelled, Deployed.
 - **Quantify at least 60% of bullets:** users, requests per second, latency, %, $, time saved, rank, accuracy,
   number of teams that adopted it. Estimates are fine when you can defend them.
 - **1 to 2 lines (80 to 200 characters).** 2 to 4 bullets for a relevant role, 1 to 3 per project.
@@ -52,7 +53,7 @@ So the resume has to (a) parse cleanly, (b) contain the posting's exact hard-ski
    queue, say so. Never add a skill the vault cannot back: it will come up in the interview.
 4. **Reorder the Skills lines and items** so the posting's terms come first.
 5. **Fit one page:** shrink type slightly first, then cut the least relevant bullets, never the strongest.
-6. **Target 70% or more coverage of the posting's hard skills.** The rest is a learning list, not a resume edit.
+6. **Target 70% or more coverage of the posting's hard skills.** The rest is a learning list, not a CV edit.
 
 ## By field
 - **SWE:** projects with links and real users; scale numbers; languages and frameworks named in bullets; GitHub.
@@ -60,7 +61,7 @@ So the resume has to (a) parse cleanly, (b) contain the posting's exact hard-ski
 - **Quant / trading:** math and competitions (Putnam, USAMO, ICPC, Kaggle), probability, C++/Python speed work,
   backtests stated honestly (live versus paper).
 - **Hardware / robotics:** the hardware platform, test results, tools (Altium, oscilloscopes, ROS), what flew or drove.
-- **Finance / IB / consulting:** the Harvard or Finance One-Pager template, GPA and test scores up top, deal and
+- **Finance / IB / consulting:** the Harvard or Finance One-Pager template, degree classification and A-levels (GPA and test scores for US roles) up top, deal and
   valuation work, leadership, and an "Additional" line for skills, certifications and interests.
 - **Product:** shipped outcomes, user metrics, cross-functional work.
 
@@ -80,6 +81,6 @@ So the resume has to (a) parse cleanly, (b) contain the posting's exact hard-ski
 | Finance One-Pager | IB, asset management, trading desks |
 | Awesome Modern | Startups, product, design-adjacent roles |
 | Banking | Business, fintech, generalist roles |
-| Sans Minimal | Big tech, new grad, a clean modern read |
+| Sans Minimal | Big tech, graduate roles, a clean modern read |
 | Compact Engineering | Lots of strong content: hardware, robotics, research-heavy |
 | Accent Bar | Data and AI roles where a little color helps you stand out (still ATS-safe) |

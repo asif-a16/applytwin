@@ -73,7 +73,7 @@ def save_vault(vault, force=False):
     old = store.resume()
     if not force and store._has_content(old) and not store._has_content(vault or {}):
         # an editor showing an empty or stale copy must never wipe the real vault; a backup is kept for every save anyway
-        raise RuntimeError("That save would have erased your whole resume, so nothing was changed. Reload the page to see your saved resume.")
+        raise RuntimeError("That save would have erased your whole CV, so nothing was changed. Reload the page to see your saved CV.")
     v = store._merge(store.DEFAULT_RESUME, vault or {})
     for sec in tailor.ENTRY_SECS:
         for e in v.get(sec, []):
@@ -142,17 +142,21 @@ def answer_questions(questions, job_id=None, notify_user=True):
 
 def answer_context(job_id):
     """What ApplyTwin itself knows about the user and this job's company, for company-specific questions: whether the
-    vault lists a job there ("Have you worked for X?") and whether ApplyTwin's records show an application there."""
-    j = (store.rows('select company from jobs where id=?', (job_id,)) or [None])[0] if job_id else None
+    vault lists a job there ("Have you worked for X?") and whether ApplyTwin's records show an application there.
+    country = where the job is (else the user's home country, the UK by default), for right-to-work questions that name
+    no country."""
+    from . import regions
+    j = (store.rows('select company, location from jobs where id=?', (job_id,)) or [None])[0] if job_id else None
+    country, home = regions.job_country(j), regions.home(store.profile())
     if not j or not j.get('company'):
-        return {}
+        return {"country": country, "home": home}
     co = j['company']
     vault = store.resume()
     orgs = [e.get('org') or e.get('company') or '' for e in (vault.get('experience') or [])]
     applied = any(match.same_company(r['company'] or '', co) for r in store.rows(
         "select company from applications where job_id!=? and status in ('Applied','Interview','OA','Offer','Rejected')", (job_id,)))
     applied = applied or any(match.same_company(r.get('company') or '', co) for r in applied_elsewhere())
-    ctx = {"company": co, "applied_before": applied}
+    ctx = {"company": co, "applied_before": applied, "country": country, "home": home}
     if orgs:   # without a vault there is nothing to check against: the bank's answer stands
         ctx['worked_here'] = any(o and match.same_company(o, co) for o in orgs)
     return ctx
@@ -1064,7 +1068,7 @@ def tailor_apply(job_id, plan=None, template=None, mode='auto', fresh=False, req
                 slot['thread'].join(timeout=15)
                 _still_working()
             if slot['thread'].is_alive():
-                return {"error": "Your resume is still being written. It will be ready here in a moment."}
+                return {"error": "Your CV is still being written. It will be ready here in a moment."}
             if slot.get('result') and slot.get('vault') == _vault_stamp() and (not template or slot['result'].get('style') == template):
                 return slot['result']
         try:   # a current dedicated build is saved: show it (in another template, the same plan re-set, no new AI plan)

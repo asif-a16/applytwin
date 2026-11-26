@@ -460,6 +460,14 @@ def profile_from_resume(vault, p):
     loc = patch.get('location') or p.get('location') or ''
     if not p.get('country') and re.search(r',\s*(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b', loc):
         patch['country'] = 'United States'   # "Austin, TX" is plainly the US: one less thing to type
+    elif not p.get('country') and loc:
+        from . import regions
+        # "Leeds, UK", "London", "M1 1AE"; never "Cambridge, Massachusetts" or "London, Ontario" (the parser reads US state
+        # names; Canadian provinces are checked here)
+        province = re.search(r',\s*(ontario|quebec|british columbia|alberta|manitoba|saskatchewan|nova scotia|new brunswick|'
+                             r'newfoundland|prince edward island)\b', loc, re.I)
+        if not province and (regions.countries(loc) == {'GB'} or re.search(r'\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b', loc)):
+            patch['country'] = 'United Kingdom'
     if edu.get('school'):
         if not p.get('school'):
             patch['school'] = edu['school']
@@ -473,8 +481,17 @@ def profile_from_resume(vault, p):
             patch['minor'] = mm[1].strip(' ;,.')
         elif not p.get('minor') and edu.get('minor'):
             patch['minor'] = edu['minor']
-        if not p.get('gpa') and edu.get('gpa'):
-            patch['gpa'] = edu['gpa']
+        if edu.get('gpa'):
+            from . import regions
+            g = str(edu['gpa'])
+            if regions.UK_CLASS.search(g) and not re.search(r'\d\.\d', g):   # "2:1", "First Class Honours": a degree class, not a GPA
+                cls = next((o for pat, o in ((r'\bfirst\b|\b1st\b', 'First (1st)'), (r'upper second|2[:.]1', 'Upper second (2:1)'),
+                                             (r'lower second|2[:.]2', 'Lower second (2:2)'), (r'\bthird\b|\b3rd\b', 'Third (3rd)'),
+                                             (r'distinction', 'Distinction'), (r'merit', 'Merit')) if re.search(pat, g, re.I)), '')
+                if cls and not p.get('degree_class'):
+                    patch['degree_class'] = cls
+            elif not p.get('gpa'):
+                patch['gpa'] = edu['gpa']
         m = re.search(rf'({MONTH})?\s*((?:19|20)\d\d)', edu.get('end', ''), re.I)
         if m:
             year = int(m.group(2))
@@ -572,7 +589,7 @@ def import_resume(name='', data=None, text=None):
     from . import match, tailor
     txt, source_tex = extract_text(name, data, text)
     if len(re.sub(r'\s+', '', txt or '')) < 40:   # a scanned (image-only) PDF has no text: never report "Found your details" for nothing
-        raise RuntimeError("ApplyTwin found no text in that file. If it's a scan or a picture of your resume, export it as a PDF from "
+        raise RuntimeError("ApplyTwin found no text in that file. If it's a scan or a picture of your CV, export it as a PDF from "
                            "Word or Google Docs, or paste the text instead.")
     if source_tex:
         with open(store.path('source.tex'), 'w', encoding='utf-8', newline='') as f:   # keep the file's own line endings
@@ -608,7 +625,7 @@ def import_resume(name='', data=None, text=None):
     return {"structured": True, "ai": structured, "vault": vault, "counts": counts, "name": b.get('name', ''), "suggest_roles": suggest,
             "latex_source": bool(source_tex), "filled": sorted(patch),
             "fallback": why.strip(),
-            "message": f"Found {found or 'your details'}." + why + ('' if structured else ' Check it in Resume Studio; your agent can polish it.')}
+            "message": f"Found {found or 'your details'}." + why + ('' if structured else ' Check it in CV Studio; your agent can polish it.')}
 
 
 # ------------------------------------------------------------------ skills from the user's public GitHub repos

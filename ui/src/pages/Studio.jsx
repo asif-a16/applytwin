@@ -24,8 +24,8 @@ function E({ value, onChange, ph, className, multiline }) {
 
 const SECS = { experience: ['Experience', { org: 'Company', title: 'Role', location: 'City, ST', start: 'Start', end: 'End' }],
   projects: ['Projects', { name: 'Project', tagline: 'Event, award, or one-liner', date: 'Date' }],
-  leadership: ['Leadership', { org: 'Organization', title: 'Role', start: 'Start', end: 'End' }],
-  volunteering: ['Volunteering', { org: 'Organization', title: 'Role', start: 'Start', end: 'End' }] }
+  leadership: ['Leadership', { org: 'Organisation', title: 'Role', start: 'Start', end: 'End' }],
+  volunteering: ['Volunteering', { org: 'Organisation', title: 'Role', start: 'Start', end: 'End' }] }
 
 export default function Studio({ arg }) {
   const { vault: v0, profile, templates, setState } = useApp()
@@ -42,7 +42,7 @@ export default function Studio({ arg }) {
   }, [])
   const restore = async () => {
     try { const r = await api('/api/vault/restore', {}); setV(r.vault); setState?.(s => s ? { ...s, vault: r.vault } : s); setBackup(null); setImporting(false)
-      toast.success('Your resume is back', { description: `${r.restored.experience} roles and ${r.restored.projects} projects restored.` }) }
+      toast.success('Your CV is back', { description: `${r.restored.experience} roles and ${r.restored.projects} projects restored.` }) }
     catch (e) { toast.error(e.message) }
   }
   const [mode, setMode] = useState('write')
@@ -57,7 +57,7 @@ export default function Studio({ arg }) {
     setV(nv); setSaved(false); setState?.(s => s ? { ...s, vault: nv } : s); clearTimeout(t.current)
     t.current = setTimeout(async () => {
       try { await api('/api/vault', nv); setSaved(true); api('/api/ats').then(setRep).catch(() => {}) }
-      catch (e) { toast.error("Couldn't save your resume", { description: e.message }) }
+      catch (e) { toast.error("Couldn't save your CV", { description: e.message }) }
     }, 650)
   }
   useEffect(() => () => {   // leaving the page with an edit still pending: save it now instead of dropping it
@@ -92,7 +92,7 @@ export default function Studio({ arg }) {
             <span className="mr-1 w-[64px] text-right text-[13px] text-muted" aria-live="polite">{saved ? 'Saved' : 'Saving…'}</span>
             <Button variant="white" onClick={() => setImporting(true)}><Upload className="size-4" />Import</Button>
             <Button variant="sky" onClick={download}><FileDown className="size-4" />Download PDF</Button></>}>
-          Resume
+          CV
         </Title>
         <div className="mb-6">
           <Segmented value={mode} onChange={setMode} options={[['write', 'Write'], ['check', 'Check'], ['style', 'Template']]} />
@@ -103,7 +103,7 @@ export default function Studio({ arg }) {
               <Doc v={v} set={set} save={save} />
               <aside className="space-y-3 lg:sticky lg:top-[72px] lg:self-start">
                 <div className="card p-5"><div className="flex items-center gap-4"><Ring value={rep?.score ?? 0} size={56} stroke={5} label={rep ? undefined : ''} />
-                  <div><div className="text-[15px] font-semibold leading-tight text-white">Resume score</div><div className="mt-0.5 text-[13px] text-muted">{!rep ? 'Checking…' : fails.length ? `${fails.length} thing${fails.length === 1 ? '' : 's'} to fix` : 'Looking sharp'}</div></div></div>
+                  <div><div className="text-[15px] font-semibold leading-tight text-white">CV score</div><div className="mt-0.5 text-[13px] text-muted">{!rep ? 'Checking…' : fails.length ? `${fails.length} thing${fails.length === 1 ? '' : 's'} to fix` : 'Looking sharp'}</div></div></div>
                   <button onClick={() => setMode('check')} className="mt-3 text-[13px] font-medium text-signal-ink hover:underline">See the checks</button></div>
                 <div className="card p-5"><div className="text-[15px] font-semibold text-white">How it works</div>
                   <ul className="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
@@ -133,7 +133,7 @@ export default function Studio({ arg }) {
         </AnimatePresence>
       </Page>
       {backup && <div className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[92vw] flex-wrap items-center gap-x-4 gap-y-2 rounded-[12px] bg-[#2c2c2e] px-4 py-3 text-[13.5px] text-white shadow-xl ring-1 ring-white/10 md:bottom-6">
-        <span>Your resume is empty. A saved version from {new Date(backup.at * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} has {backup.experience} roles and {backup.projects} projects.</span>
+        <span>Your CV is empty. A saved version from {new Date(backup.at * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} has {backup.experience} roles and {backup.projects} projects.</span>
         <button onClick={restore} className="h-8 rounded-full bg-signal px-3.5 font-medium">Restore it</button></div>}
       <Import open={importing} setOpen={setImporting} onDone={nv => { if (nv) { setV(nv); setState(s => ({ ...s, vault: nv })) } }} />
     </div>
@@ -163,9 +163,9 @@ function Doc({ v, set, save }) {
       <Sec title="Education">
         {(v.education || []).map((e, i) => (
           <div key={i} className="group relative mb-3">
-            <Row l={<E value={e.school} ph="School" onChange={x => set(['education', i, 'school'], x)} className="font-sans text-[14.5px] font-semibold" />} r={<E value={e.location} ph="City, ST" onChange={x => set(['education', i, 'location'], x)} />} />
-            <Row l={<span className="font-sans text-[13.5px] italic text-muted"><E value={e.degree} ph="Degree" onChange={x => set(['education', i, 'degree'], x)} />{' in '}<E value={e.major} ph="Major" onChange={x => set(['education', i, 'major'], x)} />
-              {' · GPA '}<E value={e.gpa} ph="4.0" onChange={x => set(['education', i, 'gpa'], x)} /></span>}
+            <Row l={<E value={e.school} ph="School" onChange={x => set(['education', i, 'school'], x)} className="font-sans text-[14.5px] font-semibold" />} r={<E value={e.location} ph="City" onChange={x => set(['education', i, 'location'], x)} />} />
+            <Row l={<span className="font-sans text-[13.5px] italic text-muted"><E value={e.degree} ph="Degree" onChange={x => set(['education', i, 'degree'], x)} />{' in '}<E value={e.major} ph="Subject" onChange={x => set(['education', i, 'major'], x)} />
+              {' · Grade '}<E value={e.gpa} ph="2:1" onChange={x => set(['education', i, 'gpa'], x)} /></span>}
               r={<span><E value={e.start} ph="Start" onChange={x => set(['education', i, 'start'], x)} /> – <E value={e.end} ph="Graduation" onChange={x => set(['education', i, 'end'], x)} /></span>} />
             <div className="mt-0.5 font-sans text-[13px] text-muted"><E value={(e.honors || []).join(' · ')} ph="Honors, scholarships, test scores (optional)" onChange={x => set(['education', i, 'honors'], x.split(/\s*·\s*/).filter(Boolean))} /></div>
           </div>))}
@@ -247,16 +247,16 @@ function Import({ open, setOpen, onDone }) {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-32px)] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[14px] bg-[#1c1c1e] p-6 shadow-[0_40px_100px_rgb(0_0_0/.5)] outline-none ring-1 ring-white/10 sm:p-7">
-          <Dialog.Title className="text-[20px] font-semibold tracking-[-0.01em] text-ink">Import your resume</Dialog.Title>
-          <p className="mb-5 mt-1 text-[14px] text-muted">Old resumes, your LinkedIn, project notes. Your twin pulls it all into one vault and never invents anything.</p>
+          <Dialog.Title className="text-[20px] font-semibold tracking-[-0.01em] text-ink">Import your CV</Dialog.Title>
+          <p className="mb-5 mt-1 text-[14px] text-muted">Old CVs, your LinkedIn, project notes. Your twin pulls it all into one vault and never invents anything.</p>
           {busy ? <div className="grid place-items-center py-14"><Loader2 className="size-6 animate-spin text-muted" />
-            <div className="mt-3 text-[14px] text-white">Reading your resume…</div>
+            <div className="mt-3 text-[14px] text-white">Reading your CV…</div>
             <ImportWait className="mt-1 text-center text-[13px] text-faint" /></div>
             : out ? <div className="rounded-[12px] bg-mist p-5"><div className="flex items-center gap-2 font-medium text-ink"><CheckCircle2 className="size-5 text-good" />{out.message}</div>
               {out.counts && <div className="mt-2 pl-7 text-[13px] text-muted">{Object.entries(out.counts).filter(([, n]) => n > 0).map(([k, n]) => `${n} ${k}`).join(' · ')}</div>}
               {!out.structured && <div className="mt-3 text-[13px] text-muted">To structure it fully, tell Claude Code or Codex: <span className="font-mono text-fg">twin: structure my dump</span>. Or add an API key in Settings.</div>}
               <div className="mt-5 flex justify-end gap-2"><Button variant="white" onClick={() => setOut(null)}>Add more</Button><Button onClick={() => setOpen(false)} arrow>Done</Button></div></div>
-            : text !== null ? <div><textarea autoFocus rows={10} value={text} onChange={e => setText(e.target.value)} placeholder="Paste anything: a resume, your LinkedIn About + Experience, notes…" className="box" />
+            : text !== null ? <div><textarea autoFocus rows={10} value={text} onChange={e => setText(e.target.value)} placeholder="Paste anything: a CV, your LinkedIn About + Experience, notes…" className="box" />
               <div className="mt-4 flex justify-end gap-2"><Button variant="ghost" onClick={() => setText(null)}>Back</Button><Button onClick={() => send({ text })} arrow disabled={!text.trim()}>Import</Button></div></div>
             : <Drop onFile={f => send({ name: f.name, data: f.data })} onText={() => setText('')} />}
         </Dialog.Content>
@@ -274,7 +274,7 @@ function Coverflow({ templates, tpl, pick }) {
   }, [templates.length])
   const cur = templates[i] || {}
   // only the templates you're looking at (and their neighbours) load a preview: all nine at once took most of a second
-  // on a slow laptop and rendered every resume in the background; once loaded, a preview stays
+  // on a slow laptop and rendered every CV in the background; once loaded, a preview stays
   const [seen, setSeen] = useState(() => new Set([idx - 1, idx, idx + 1]))
   useEffect(() => { setSeen(s => s.has(i - 1) && s.has(i) && s.has(i + 1) ? s : new Set([...s, i - 1, i, i + 1])) }, [i])
   return (

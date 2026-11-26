@@ -205,7 +205,9 @@ def _workday_search():
     """What to search Workday for: interns see internships, co-op students co-ops too, new grads early-career roles, and
     full-time searches see everything (matching filters it down afterwards)."""
     kind = (store.profile().get('search') or {}).get('kind') or 'internship'
-    return {'internship': ['intern'], 'co-op': ['intern', 'co-op'], 'new-grad': ['new grad', 'university', 'early career', 'graduate'],
+    # UK names too: placement years ("Industrial Placement"), spring weeks and insight programmes, graduate programmes
+    return {'internship': ['intern', 'spring week', 'insight'], 'co-op': ['intern', 'co-op', 'placement'],
+            'new-grad': ['new grad', 'university', 'early career', 'graduate'],
             'full-time': ['']}.get(kind, ['intern'])
 
 

@@ -1,6 +1,8 @@
 # ApplyTwin
 
-ApplyTwin is a free app for your computer that finds internships, writes a one-page resume for each posting and fills out the application for you.
+ApplyTwin is a free app for your computer that finds internships, placements and graduate jobs, writes a one-page CV for each posting and fills out the application for you.
+
+It is set up for the UK: it searches UK roles by default, writes A4 CVs in British English, and answers UK application questions (right to work, degree classification, A-levels and UCAS points, equality monitoring). Add other countries in Settings, including the US.
 
 It runs on the Claude Code or Codex plan you already pay for. There are no API keys and no new subscription.
 
@@ -25,18 +27,18 @@ You don't need anything installed first. If your computer has no Python or Node.
 1. **It installs.** ApplyTwin goes into `~/.applytwin-app` (`%USERPROFILE%\.applytwin-app` on Windows), connects itself to Claude Code and Codex, and runs a setup check.
 2. **The app opens in your browser at http://localhost:4747.** That page is ApplyTwin, running on your own computer.
 3. **Sign in with Google there.** Your setup, answers and applications are saved to your account, so a new laptop picks up where you left off.
-4. **Add your resume.** Drop in the one you have (PDF, Word, LaTeX or text) and answer the usual application questions once.
+4. **Add your CV.** Drop in the one you have (PDF, Word, LaTeX or text) and answer the usual application questions once.
 5. **Press Start** on the Autopilot page. It applies in its own browser window and pings you when it needs you.
 
-> **The app is http://localhost:4747.** The website apply.twinly.tech is where you get the install line. Your account page at [apply.twinly.tech/app](https://apply.twinly.tech/app) shows the applications your app has synced, from any device. You sign in, add your resume and press Start on localhost:4747.
+> **The app is http://localhost:4747.** The website apply.twinly.tech is where you get the install line. Your account page at [apply.twinly.tech/app](https://apply.twinly.tech/app) shows the applications your app has synced, from any device. You sign in, add your CV and press Start on localhost:4747.
 
 From then on ApplyTwin runs like a normal app. It starts by itself when you log in, so http://localhost:4747 always works. You can also open it from the ApplyTwin icon (Applications or Spotlight on Mac, the Start menu on Windows, your app menu on Linux) or by typing `applytwin` in a new terminal. Jobs refresh on their own and the app updates itself. To update by hand, run the install line again or `applytwin update`.
 
 ## How it works
 
-**It finds jobs.** ApplyTwin reads the career sites of more than 600 companies (Greenhouse, Lever, Ashby, Workday and SmartRecruiters boards), plus the community internship trackers, The Muse, Hacker News "Who is hiring" and remote job boards. Each posting gets a fit score based on your roles, level, location, graduation date, sponsorship needs and how much of the posting your experience covers. Your dream companies go to the front of the queue.
+**It finds jobs.** ApplyTwin reads the career sites of more than 600 companies (Greenhouse, Lever, Ashby, Workday and SmartRecruiters boards), plus the community internship trackers, The Muse, Hacker News "Who is hiring" and remote job boards. Each posting gets a fit score based on your roles, level, location, graduation date, right to work and how much of the posting your experience covers. Your dream companies go to the front of the queue.
 
-**It tailors a resume for each posting.** You keep everything you have done in one place, the Career Vault. For each job, ApplyTwin picks your most relevant roles and bullets, orders them for that reader and fits them on one page. A fact check rejects any rewrite that adds a number, tool or claim the original entry doesn't have. Your numbers, titles, employers, degrees and awards stay exactly as you wrote them. There are 8 templates, all single column with real text, so applicant tracking systems can read them.
+**It tailors a CV for each posting.** You keep everything you have done in one place, the Career Vault. For each job, ApplyTwin picks your most relevant roles and bullets, orders them for that reader and fits them on one page. A fact check rejects any rewrite that adds a number, tool or claim the original entry doesn't have. Your numbers, titles, employers, degrees and awards stay exactly as you wrote them. There are 8 templates, all single column with real text, so applicant tracking systems can read them.
 
 **It fills the application.** Your own Claude Code or Codex opens the form in a browser, follows ApplyTwin's playbook for that application system, answers from your saved answers and uploads the tailored PDF. Then it stops on the review screen so you press Submit. If you turn on "Submit applications on its own" in Settings, it submits for you.
 
@@ -49,7 +51,7 @@ From then on ApplyTwin runs like a normal app. It starts by itself when you log 
 - Show your password to the AI
 - Solve a CAPTCHA
 - Accept a legal agreement
-- Change a number, title, employer, degree or award on your resume
+- Change a number, title, employer, degree or award on your CV
 
 When it hits one of these, it stops and sends you a notification.
 
@@ -75,13 +77,13 @@ Only if you turn that on. Otherwise it fills every form and stops on the review 
 Yes. Mac, Windows and Linux. On Windows, paste the PowerShell command.
 
 **Is it only for software jobs?**
-No. It knows what a strong resume looks like in your field, from nursing and finance to design, research and engineering.
+No. It knows what a strong CV looks like in your field, from nursing and finance to design, research and engineering.
 
 **Why do I sign in with Google?**
 So your setup, answers and applications are saved to your account. ApplyTwin never posts, emails or signs up for anything as you.
 
 **Does it track me?**
-It counts installs with a random ID, your OS, the ApplyTwin version and which agent you use, once a day. Never your name, email, resume, jobs or applications. Turn it off in Settings (Count my install) or set `APPLYTWIN_NO_TELEMETRY=1`.
+It counts installs with a random ID, your OS, the ApplyTwin version and which agent you use, once a day. Never your name, email, CV, jobs or applications. Turn it off in Settings (Count my install) or set `APPLYTWIN_NO_TELEMETRY=1`.
 
 **What does it cost?**
 Nothing. ApplyTwin is free.
@@ -125,9 +127,9 @@ ApplyTwin also works from a chat with your agent. Try:
 
 - `set me up with applytwin`
 - `twin: scan and show my top 20`
-- `twin: tailor my resume for <job id or URL> and explain the choices`
+- `twin: tailor my CV for <job id or URL> and explain the choices`
 - `twin: apply to my top 10`
-- `twin: review my resume like a recruiter`
+- `twin: review my CV like a recruiter`
 
 The agent needs a browser it can drive: Claude in Chrome or computer use for Claude Code, or the browser tools in Codex.
 
@@ -146,7 +148,7 @@ cd applytwin
 python3 tests/smoke.py     # tests
 ```
 
-The Python side uses only the standard library. `applytwin/` holds the store, job sources, matching, tailoring, rendering, the local server and the MCP server. The app's interface is React in `ui/` and builds into `web/` with `cd ui && npm install && npm run build`; `npm run dev` serves it on port 5173 against a running app. Agent skills are in `skills/`, playbooks for each application system in `playbooks/`, and agent instructions in [AGENTS.md](AGENTS.md). Resume writing rules are in [docs/RESUME_GUIDE.md](docs/RESUME_GUIDE.md).
+The Python side uses only the standard library. `applytwin/` holds the store, job sources, matching, tailoring, rendering, the local server and the MCP server. The app's interface is React in `ui/` and builds into `web/` with `cd ui && npm install && npm run build`; `npm run dev` serves it on port 5173 against a running app. Agent skills are in `skills/`, playbooks for each application system in `playbooks/`, and agent instructions in [AGENTS.md](AGENTS.md). CV writing rules are in [docs/RESUME_GUIDE.md](docs/RESUME_GUIDE.md).
 
 ## License
 

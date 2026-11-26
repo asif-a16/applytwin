@@ -41,7 +41,7 @@ export default function Answers() {
           placeholder="Will you now or in the future require H-1B sponsorship?" className="box h-10 py-0" /><Button onClick={ask} loading={asking} disabled={!q.trim()}>Answer</Button></div>
         {test && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} className="mt-4 border-t border-line pt-4">
           {test.answer ? <><div className="text-[15px] font-medium text-white">{test.answer}</div><div className="mt-0.5 text-[13px] text-muted">Matched “{test.key}” · {Math.round(test.confidence * 100)}% sure</div></>
-            : test.action === 'write' ? <><div className="text-[15px] font-medium text-white">Written for each job</div><div className="mt-0.5 text-[13px] text-muted">Your twin writes this one fresh for every posting, from your resume.</div></>
+            : test.action === 'write' ? <><div className="text-[15px] font-medium text-white">Written for each job</div><div className="mt-0.5 text-[13px] text-muted">Your twin writes this one fresh for every posting, from your CV.</div></>
             : <><div className="text-[15px] font-medium text-white">New question</div><div className="mt-0.5 text-[13px] text-muted">Your twin will ask you once, then remember.</div></>}</motion.div>}
       </div>
       <div className="mb-2 flex items-baseline justify-between px-1"><h2 className="text-[17px] font-semibold tracking-[-0.01em] text-white">Your answers</h2>

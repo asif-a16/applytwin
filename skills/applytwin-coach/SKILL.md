@@ -1,9 +1,9 @@
 ---
 name: applytwin-coach
-description: "Review and strengthen the user's resume / Career Vault with ApplyTwin like an expert recruiter. Use for 'review my resume', 'make my resume better', 'why am I getting rejected', 'what should I improve', or before a big application cycle."
+description: "Review and strengthen the user's CV (resume) / Career Vault with ApplyTwin like an expert recruiter. Use for 'review my CV', 'review my resume', 'make my CV better', 'why am I getting rejected', 'what should I improve', or before a big application cycle."
 ---
 
-# Resume coaching with ApplyTwin
+# CV coaching with ApplyTwin
 
 1. `applytwin_get_vault` and `applytwin_ats_report()` (no job = lint only). Read the guide in the tailor prompt
    (`applytwin_tailor_prompt` on any job shows it) or rely on these rules:

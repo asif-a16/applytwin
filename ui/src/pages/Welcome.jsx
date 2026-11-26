@@ -12,15 +12,15 @@ import { Drop, Segmented, Switch } from '../components/ui'
 import { Logo } from '../components/Shell'
 import { Chips, ROLE_SUGGEST } from './Settings'
 import { WhereAbroad } from '../components/Regions'
-import { ProfileQuestions, missing, useQuestions } from '../components/ProfileQuestions'
+import { ProfileQuestions, applies, missing, useQuestions } from '../components/ProfileQuestions'
 
 /* Setup, the way Apple does it: one clear question per screen, big choices, a gentle slide between screens, and you
    can't move on until the screen is answered. Everything here is used, unchanged, on every application. */
 
-const DREAM_SUGGEST = ['Google', 'Apple', 'Microsoft', 'Jane Street', 'Citadel', 'Goldman Sachs', 'J.P. Morgan', 'McKinsey', 'Deloitte',
-  'OpenAI', 'Anthropic', 'NVIDIA', 'Stripe', 'Mayo Clinic', 'Pfizer', 'Disney']
-const KINDS = [['internship', 'Internship', 'A summer (or other term) internship'], ['co-op', 'Co-op', 'A paid term away from classes'],
-  ['new-grad', 'New grad', 'Your first full-time role after graduating'], ['full-time', 'Full-time', 'You already have work experience']]
+const DREAM_SUGGEST = ['Google DeepMind', 'Arm', 'Jane Street', 'Goldman Sachs', 'J.P. Morgan', 'Barclays', 'HSBC', 'PwC', 'Deloitte', 'McKinsey',
+  'Monzo', 'Revolut', 'Wise', 'Anthropic', 'BAE Systems', 'Rolls-Royce', 'GSK', 'AstraZeneca', 'Unilever', 'BBC']
+const KINDS = [['internship', 'Internship', 'A summer internship, spring week or insight programme'], ['co-op', 'Placement year', 'A 6-12 month industrial placement (sandwich year)'],
+  ['new-grad', 'Graduate scheme', 'Your first full-time role after graduating'], ['full-time', 'Full-time', 'You already have work experience']]
 const ARRANGE = [['onsite', 'On-site'], ['hybrid', 'Hybrid'], ['remote', 'Remote']]
 const SPRING = { type: 'spring', stiffness: 260, damping: 30 }
 
@@ -29,20 +29,20 @@ export default function Welcome() {
   const [i, setI] = useState(0)
   const [dir, setDir] = useState(1)
   const [p, setP] = useState(() => structuredClone(profile))
-  // back in setup after a reload or a closed tab: the resume you already gave counts, no second upload needed
+  // back in setup after a reload or a closed tab: the CV you already gave counts, no second upload needed
   const [imp, setImp] = useState(() => (vault?.experience?.length || vault?.projects?.length)
     ? { name: vault.basics?.name, counts: Object.fromEntries(['experience', 'research', 'projects', 'leadership', 'skills'].map(k => [k, (vault[k] || []).length])) } : null)
   const [busy, setBusy] = useState(false)
   const mounted = useRef(true)
   useEffect(() => () => { mounted.current = false }, [])
-  const [pasted, setPasted] = useState(null)   // window.prompt() flattens line breaks, which the resume reader needs
+  const [pasted, setPasted] = useState(null)   // window.prompt() flattens line breaks, which the CV reader needs
   const [agents, setAgents] = useState(null)
   const [scan, setScan] = useState(null)
   const [queue, setQueue] = useState(null)
   const empty = !!queue && !queue.total
   const [tick, setTick] = useState(0)
   useEffect(() => { if (!busy) return; const t = setInterval(() => setTick(x => x + 1), 3500); return () => clearInterval(t) }, [busy])
-  const READING = ['Reading your resume…', 'Finding your experience…', 'Pulling out projects and research…', 'Spotting your skills…', 'Filling in your answers…', 'Almost done…']
+  const READING = ['Reading your CV…', 'Finding your experience…', 'Pulling out projects and research…', 'Spotting your skills…', 'Filling in your answers…', 'Almost done…']
   const qs = useQuestions()
   const s = p.search || {}
   const ss = (k, v) => setP(x => ({ ...x, search: { ...x.search, [k]: v } }))
@@ -50,7 +50,7 @@ export default function Welcome() {
   const now = new Date(), year = now.getFullYear() + (now.getMonth() >= 7 ? 1 : 0)   // from August, next summer's cycle
   const picked = (s.season || '').split(',').map(x => x.trim()).filter(Boolean)
   // the list never shifts under you (picking Winter used to move every tile a year on); a saved term outside it still shows, so you can unpick it
-  const terms = [...new Set([`Summer ${year}`, `Fall ${year}`, `Winter ${year + 1}`, `Spring ${year + 1}`, `Summer ${year + 1}`, ...picked])]
+  const terms = [...new Set([`Summer ${year}`, `Autumn ${year}`, `Winter ${year + 1}`, `Spring ${year + 1}`, `Summer ${year + 1}`, ...picked])]
   const intern = ['internship', 'co-op'].includes(s.kind)
   const groupLeft = g => missing((qs || []).filter(q => q.group === g), p).length
   const loadAgents = useCallback(() => api('/api/agents').then(setAgents).catch(() => setAgents(a => a || {})), [])
@@ -68,7 +68,7 @@ export default function Welcome() {
     setBusy(true)
     try {
       const r = await api('/api/import', body); setImp(r); setPasted(null)
-      if (r.fallback) toast(r.fallback, { description: 'Check it in Resume Studio; your agent can polish it later.' })
+      if (r.fallback) toast(r.fallback, { description: 'Check it in CV Studio; your agent can polish it later.' })
       if (r.vault) setState(st => ({ ...st, vault: r.vault }))
       const fresh = (await api('/api/state')).profile
       saved.current = structuredClone(fresh)   // that's what the app has now
@@ -103,10 +103,13 @@ export default function Welcome() {
     { id: 'companies', ok: true, cta: 'Continue' },
     { id: 'history', ok: true, cta: 'Continue' },
     { id: 'You', ok: groupLeft('You') === 0, cta: 'Continue' },
-    { id: 'School', ok: groupLeft('School') === 0, cta: 'Continue' },
-    { id: 'Work authorization', ok: groupLeft('Work authorization') === 0, cta: 'Continue' },
+    { id: 'Education', ok: groupLeft('Education') === 0, cta: 'Continue' },
+    { id: 'Right to work', ok: groupLeft('Right to work') === 0, cta: 'Continue' },
     { id: 'Standard questions', ok: groupLeft('Standard questions') === 0, cta: 'Continue' },
-    { id: 'Voluntary self-identification', ok: groupLeft('Voluntary self-identification') === 0, cta: 'Continue' },
+    // US work authorisation: only for users who also apply in the US
+    ...((qs || []).some(q => q.group === 'US applications only' && q.when && applies(q, p))
+      ? [{ id: 'US applications only', ok: groupLeft('US applications only') === 0, cta: 'Continue' }] : []),
+    { id: 'Equality monitoring', ok: groupLeft('Equality monitoring') === 0, cta: 'Continue' },
     { id: 'apply', ok: true, cta: 'Continue' },
     { id: 'agent', ok: true, cta: 'Find my jobs' },
     { id: 'scan', ok: false, cta: null },
@@ -150,10 +153,10 @@ export default function Welcome() {
     hello: <Center>
       <div className="flex justify-center"><Logo size={56} /></div>
       <H>Let's set up your twin</H>
-      <Sub>About five minutes. You answer everything once. After that it finds jobs, writes a resume for each one and applies on its own.</Sub>
+      <Sub>About five minutes. You answer everything once. After that it finds jobs, writes a CV for each one and applies on its own.</Sub>
     </Center>,
     resume: <Center wide>
-      <H>Start with your resume</H>
+      <H>Start with your CV</H>
       <Sub>It reads everything you've done and fills in every answer it can. You'll check them later.</Sub>
       <div className="mx-auto mt-10 max-w-[560px] text-left">
         {busy ? <div className="card grid place-items-center py-14"><Loader2 className="size-6 animate-spin text-muted" />
@@ -171,7 +174,7 @@ export default function Welcome() {
             {imp.filled?.length > 0 && <div className="mt-1 text-[14px] text-muted">{imp.filled.length} application answers filled in from it</div>}
             <button onClick={() => setImp(null)} className="mt-5 text-[13px] text-signal-ink hover:underline">Use a different file</button>
           </motion.div>
-          : pasted !== null ? <div><textarea autoFocus rows={10} value={pasted} onChange={e => setPasted(e.target.value)} placeholder="Paste your resume, your LinkedIn About + Experience, notes…"
+          : pasted !== null ? <div><textarea autoFocus rows={10} value={pasted} onChange={e => setPasted(e.target.value)} placeholder="Paste your CV, your LinkedIn About + Experience, notes…"
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && pasted.trim()) upload({ text: pasted }) }}
               className="w-full rounded-[12px] bg-white/[.06] p-4 text-[15px] text-white outline-none placeholder:text-faint focus:ring-2 focus:ring-signal" />
             <div className="mt-3 flex justify-end gap-2"><button onClick={() => setPasted(null)} className="h-10 rounded-full px-4 text-[14px] text-white/70 hover:text-white">Back</button>
@@ -200,7 +203,7 @@ export default function Welcome() {
     </Center>,
     roles: <Center wide>
       <H>Which roles?</H>
-      <Sub>{imp?.suggest_roles?.length ? 'We picked these from your resume. Add anything, in any field.' : 'Pick some, or type any role in any field.'}</Sub>
+      <Sub>{imp?.suggest_roles?.length ? 'We picked these from your CV. Add anything, in any field.' : 'Pick some, or type any role in any field.'}</Sub>
       <div className="mx-auto mt-8 max-w-[600px] text-left"><Chips large value={s.roles || []} onChange={v => ss('roles', v)} placeholder="Type a role and press Enter" suggestions={ROLE_SUGGEST} /></div>
     </Center>,
     where: <Center wide>
@@ -211,9 +214,9 @@ export default function Welcome() {
           const a = x.search?.arrangement || [], n = a.includes(v) ? a.filter(y => y !== v) : [...a, v]
           return { ...x, search: { ...x.search, arrangement: n }, onsite_ok: n.some(y => y !== 'remote') || x.onsite_ok }
         })} />
-      <div className="mx-auto mt-6 max-w-[600px] text-left"><Chips large value={s.locations || []} onChange={v => ss('locations', v)} placeholder="United States, a city, Remote…"
-        suggestions={['United States', 'Remote', 'New York', 'San Francisco', 'Seattle', 'Boston', 'Chicago', 'Austin', 'Los Angeles', 'Washington, DC']} /></div>
-      <div className="mx-auto mt-8 max-w-[600px] text-left"><div className="mb-3 text-[15px] font-medium text-white">Outside the US? <span className="font-normal text-muted">Optional: Europe, India and more.</span></div>
+      <div className="mx-auto mt-6 max-w-[600px] text-left"><Chips large value={s.locations || []} onChange={v => ss('locations', v)} placeholder="London, a city, Remote…"
+        suggestions={['London', 'Remote', 'Manchester', 'Edinburgh', 'Cambridge', 'Bristol', 'Birmingham', 'Leeds', 'Glasgow', 'Oxford']} /></div>
+      <div className="mx-auto mt-8 max-w-[600px] text-left"><div className="mb-3 text-[15px] font-medium text-white">Countries <span className="font-normal text-muted">The UK to start with. Add Europe, the US and more if you like.</span></div>
         <WhereAbroad large compact p={p} setP={setP} /></div>
     </Center>,
     companies: <Center wide>
@@ -284,13 +287,14 @@ export default function Welcome() {
       : <><H>{(queue?.total || 0).toLocaleString()} roles ready{scan?.done < scan?.sources ? ' so far' : ''}</H>
       <Sub>{queue?.dream ? `${queue.dream} at your dream companies, first in line. ` : ''}{scan?.done < scan?.sources
         ? 'Your twin is still reading job boards, and more roles arrive over the next few minutes. You can start now. '
-        : ''}Every one gets its own resume. Press Start and your twin takes it from here.</Sub></>}
+        : ''}Every one gets its own CV. Press Start and your twin takes it from here.</Sub></>}
     </Center>,
   }
-  const group = qs && ['You', 'School', 'Work authorization', 'Standard questions', 'Voluntary self-identification'].includes(cur.id)
-  const groupCopy = { You: ['About you', 'From your resume where we could. Check them.'], School: ['Your school', 'Forms ask these on almost every application.'],
-    'Work authorization': ['Work authorization', 'Answered exactly as you say, on every form.'], 'Standard questions': ['A few standard questions', 'The ones most forms ask.'],
-    'Voluntary self-identification': ['Voluntary self-identification', 'Optional for employers, so "Decline" is always a fine answer. Nothing is chosen for you.'] }
+  const group = qs && ['You', 'Education', 'Right to work', 'Standard questions', 'US applications only', 'Equality monitoring'].includes(cur.id)
+  const groupCopy = { You: ['About you', 'From your CV where we could. Check them.'], Education: ['Your education', 'Graduate and placement forms ask these on almost every application.'],
+    'Right to work': ['Right to work', 'Answered exactly as you say, on every form.'],
+    'US applications only': ['Applying in the US', 'US forms ask these. Answered exactly as you say.'], 'Standard questions': ['A few standard questions', 'The ones most forms ask.'],
+    'Equality monitoring': ['Equality and diversity monitoring', 'Optional for employers, so "Prefer not to say" is always a fine answer. Nothing is chosen for you.'] }
 
   return (
     <div className="relative min-h-screen overflow-hidden">

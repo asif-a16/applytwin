@@ -3156,6 +3156,17 @@
     "No Summary or Objective block (17% of elite pages vs 35%); the page opens with Education or Experience.",
     "Working-student (Werkstudent) and research-assistant (HiWi) roles are real experience: keep them as roles with measured bullets."
    ]
+  },
+  "uk": {
+   "label": "the UK",
+   "basis": "UK graduate-recruitment conventions (CV norms, not measured from the corpus)",
+   "conventions": [
+    "British English spelling throughout (optimised, organised, analysed, modelling, colour, programme for a scheme or course); product names, tools and titles stay exactly as the vault spells them.",
+    "Education gives the degree and the classification as the vault states it ('BSc Computer Science, predicted First', '2:1'), never a GPA conversion; A-level (or equivalent) grades may take one line under the school when the vault has them and the page has room.",
+    "Month-name dates ('Sep 2024 - Jun 2025'), never US numeric dates.",
+    "No photo, date of birth, age, marital status or nationality on the page: UK recruiters screen these out.",
+    "No Objective; a one-line profile only if the vault has one, and Education first while still studying or within a year of graduating."
+   ]
   }
  }
 }

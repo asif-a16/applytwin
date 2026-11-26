@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 
-/* While a resume import runs: the honest time left (learned from how long your agent takes on this computer), a note when
+/* While a CV import runs: the honest time left (learned from how long your agent takes on this computer), a note when
    it runs long, and Cancel, which stops your agent so the built-in reader finishes it in a second. */
 export function ImportWait({ className = '' }) {
   const [p, setP] = useState(null)

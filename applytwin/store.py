@@ -27,23 +27,26 @@ def path(*parts):
 DEFAULT_PROFILE = {   # nothing about the person is assumed: unanswered fields stay blank and the user is asked
     "name": "", "email": "", "phone": "", "location": "", "linkedin": "", "github": "", "website": "",
     "school": "", "degree": "", "major": "", "minor": "", "gpa": "",
+    "degree_class": "", "a_levels": "", "gcse": "", "ucas_points": "",   # what UK graduate forms ask instead of a GPA
     "grad_month": "", "grad_year": "", "start_year": "", "class_standing": "",
     "work_authorized_us": None, "needs_sponsorship": None, "citizenship": "",
     "willing_to_relocate": None, "onsite_ok": None, "earliest_start": "",
     "over_18": None, "background_check_ok": None, "has_noncompete": None, "government_employee": None,
     "salary_expectation": "", "sms_ok": None, "ai_review_ok": None,
-    "eeo": {"gender": "", "race": "", "hispanic": "", "veteran": "", "disability": "", "pronouns": ""},
-    # outside the US (regions.py): right to work per country ('GB', 'EU', 'IN'...: citizen | authorized | sponsorship) and
-    # what European and Indian forms ask
+    "eeo": {"gender": "", "race": "", "hispanic": "", "veteran": "", "disability": "", "pronouns": "",
+            # UK equality and social-mobility monitoring
+            "sexual_orientation": "", "religion": "", "school_type": "", "free_school_meals": "", "first_generation": ""},
+    # right to work per country (regions.py: 'GB', 'EU', 'IN'...: citizen | authorized | sponsorship; the US uses the fields
+    # above) and what UK, European and Indian forms ask
     "work_auth": {}, "nationality": "", "notice_period": "", "current_ctc": "", "expected_ctc": "", "expected_salary_local": "",
     "marks_10th": "", "marks_12th": "", "cgpa": "", "gpa_scale": "", "languages": "", "visa_type": "", "gdpr_ok": None,
     "search": {
         "kind": "",                                 # internship | co-op | new-grad | full-time (asked in setup)
-        "season": "",                               # one or more terms, e.g. "Summer 2027, Fall 2027"
+        "season": "",                               # one or more terms, e.g. "Summer 2027, Autumn 2027"
         "roles": [], "arrangement": [],
         "include": [], "exclude": ["phd", "mba", "master", "senior", "staff", "principal", "manager"],
         "locations": [],
-        "countries": [], "cities": [],              # countries / cities to work in; empty = the original US-first matching
+        "countries": ["United Kingdom"], "cities": [],   # countries / cities to work in (the UK unless changed); empty = US-first matching
         "programs": [],                             # internship | placement | working_student | graduate_scheme | campus; empty = all
         "min_fit": 65,
         "companies_priority": [], "companies_skip": [],

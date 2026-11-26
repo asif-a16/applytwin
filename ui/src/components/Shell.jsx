@@ -9,7 +9,7 @@ import { StarButton } from '../lib/star'
 
 const MOD = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl '   // Windows and Linux have no ⌘ key
 
-export const NAV = [['home', 'Today'], ['jobs', 'Jobs'], ['studio', 'Resume'], ['answers', 'Answers'], ['board', 'Applications'], ['agents', 'Autopilot']]
+export const NAV = [['home', 'Today'], ['jobs', 'Jobs'], ['studio', 'CV'], ['answers', 'Answers'], ['board', 'Applications'], ['agents', 'Autopilot']]
 
 /* Two overlapping squares: you, and your twin. */
 export function Logo({ size = 22 }) {
@@ -54,7 +54,7 @@ function Account({ auth, signIn, signOut }) {
           className="absolute right-0 top-11 w-64 origin-top-right overflow-hidden rounded-[12px] bg-[#2a2a2c] p-1.5 ring-1 ring-white/10 shadow-[0_20px_60px_rgb(0_0_0/.45)]">
           <div className="px-3 py-2.5"><div className="truncate text-[14px] font-semibold">{u.name || 'Signed in'}</div><div className="truncate text-[12.5px] text-muted">{u.email}</div></div>
           <div className="mx-2 h-px bg-white/[.06]" />
-          <div className="px-3 py-2 text-[12.5px] text-muted">Your vault, answers and resumes sync to your ApplyTwin space.</div>
+          <div className="px-3 py-2 text-[12.5px] text-muted">Your vault, answers and CVs sync to your ApplyTwin space.</div>
           <button onClick={() => { setOpen(false); signOut() }} className="w-full rounded-[10px] px-3 py-2 text-left text-[14px] text-bad hover:bg-white/[.04]">Sign out</button>
         </motion.div>)}</AnimatePresence>
     </div>

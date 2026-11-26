@@ -14,7 +14,7 @@
   major; if missing pick the closest broad option ("Engineering"); never accept a wrong autocomplete.
 - EEO selects: gender options may list "Female" before "Male" (exact click); race can be multi-select.
 - Verify chosen values via `[class*=single-value]` / `[class*=multi-value]` text before submitting.
-- Upload the resume LAST; after upload take a screenshot so keyboard focus returns to the page.
+- Upload the CV LAST; after upload take a screenshot so keyboard focus returns to the page.
 - Submit: click "Submit application"; success = URL contains /confirmation or a thank-you message.
 - Email security code page = hard stop unless `email_codes` is `agent` (Needs User, notes "emailed code at <url>",
   form left filled). It appears after several rapid submits from one browser: `applytwin_next_jobs` already spaces

@@ -119,8 +119,8 @@ export default function App() {
     }
     tick()
   }
-  const actions = [['Scan for new jobs', Radar, startScan], ['Open Resume Studio', FileText, () => go('studio')],
-    ['Import a resume', Upload, () => go('studio', 'import')], ['Connect Claude or Codex', Play, () => go('agents')]]
+  const actions = [['Scan for new jobs', Radar, startScan], ['Open CV Studio', FileText, () => go('studio')],
+    ['Import a CV', Upload, () => go('studio', 'import')], ['Connect Claude or Codex', Play, () => go('agents')]]
 
   if (!state && loadErr) return (
     <div className="grid h-full place-items-center px-6 text-center">

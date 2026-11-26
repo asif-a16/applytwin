@@ -17,7 +17,7 @@ value that *looks* filled but never registered with the page's framework.
 4. `applytwin_playbook(<ats>)` for this ATS's specifics.
 
 ## Filling
-- **Upload the resume first** on ATSes that parse it (Workday, SmartRecruiters, Jobvite, Paylocity, Workable,
+- **Upload the CV first** on ATSes that parse it (Workday, SmartRecruiters, Jobvite, Paylocity, Workable,
   Rippling): parsing fills fields a few seconds later and can wipe or duplicate what you typed. Wait for the
   parse, then fix fields. On Greenhouse upload LAST (it steals keyboard focus).
 - **Real input beats JS.** Many React forms ignore values set by script. Click the field (or focus it), select
@@ -42,7 +42,7 @@ value that *looks* filled but never registered with the page's framework.
   (unattended) never ask: log Needs User `required question: <exact text>` and go to the next job.
 - **Truthful only.** Never invent experience, skills, GPA, dates or availability. If a question asks for
   something the vault doesn't have (date of birth, a recommender's or referrer's name, an emergency contact, an
-  SSN), never guess and never reuse a different answer: leave it blank if optional; if required, `applytwin_notify`
+  SSN, National Insurance number, right-to-work share code, passport number), never guess and never reuse a different answer: leave it blank if optional; if required, `applytwin_notify`
   and log Needs User with the exact question.
 - **Optional essays** ("Why us?", "Anything else?"): write 2-4 specific sentences from the vault and the
   posting, plain language, no em dashes, no clichés. Long required essays (>150 words): ask the user first
@@ -81,3 +81,16 @@ value that *looks* filled but never registered with the page's framework.
   (often 2-3 per 30-60 days); a "maximum number of applications" message means stop for that company.
 - Greenhouse starts demanding email codes after ~6-8 rapid submits: space Greenhouse submits 4-5 minutes
   apart and interleave other ATSes.
+
+## UK forms
+- Right to work: answer for the country the job is in (`applytwin_answer_questions` does this). "Do you have the right
+  to work in the UK?" is not the US work-authorisation answer. Never type a share code, BRP or NI number unless the
+  user saved it.
+- Education: degree classification (predicted or achieved: First, 2:1, 2:2), A-levels or equivalent (IB, Highers,
+  BTEC), UCAS points and GCSEs come from the profile. A "2:1 or above" requirement the user doesn't meet is a knockout:
+  log Skipped with the reason.
+- Equality and social-mobility monitoring (ethnic group, disability under the Equality Act 2010, sexual orientation,
+  religion, school type, free school meals, first generation at university): use the user's saved answer, else
+  "Prefer not to say" only if the user chose that; otherwise leave it for the user.
+- Dates on UK forms are DD/MM/YYYY; addresses take a postcode and a county, not a ZIP and a state.
+- Situational judgement tests, video interviews and online tests sent after applying are assessments: notify the user.

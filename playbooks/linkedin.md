@@ -4,7 +4,7 @@
 - The modal pre-fills work experience from the profile: check each entry against the vault (title, company,
   dates, location). Profile imports often shift descriptions between roles: fix them in the form (and tell the
   user to fix the profile, since recruiters compare the two).
-- Upload the tailored PDF on the resume step and make sure it is the selected one.
+- Upload the tailored PDF on the CV step and make sure it is the selected one.
 - Questions re-render after every click (element refs go stale): take a screenshot, click by position, take
   another screenshot to verify. Watch for mis-clicks on adjacent checkboxes ("previously worked at...").
 - "Do you work/have you worked at LinkedIn or Microsoft": gig or contract work done through a third-party

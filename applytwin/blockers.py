@@ -34,7 +34,7 @@ CATEGORIES = [
                    r'technical screening|screening (quiz|test)'),
     ('eligibility', r'ineligible|not eligible|eligibility|graduation window|grad window|ph\.?d|master.?s only|requires? (current )?'
                     r'(enrollment|u\.?s\.? (work|citizen))|citizenship|clearance|not (us|u\.s\.) work authori|sponsorship'),
-    ('upload', r'upload (failed|did not|didn.t|error)|resume (did not|didn.t|wouldn.t|not) (attach|upload)|file input|could not (attach|upload)|'
+    ('upload', r'upload (failed|did not|didn.t|error)|(resume|cv) (did not|didn.t|wouldn.t|not) (attach|upload)|file input|could not (attach|upload)|'
                r'transcript (required|not supplied)|portfolio required|writing sample'),
     ('dropdown', r'dropdown|drop-down|combobox|typeahead|autocomplete|picker|listbox|select (did not|didn.t|wouldn.t) (register|stick)|'
                  r'failed to register'),

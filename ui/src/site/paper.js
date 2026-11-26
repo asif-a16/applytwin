@@ -1,4 +1,4 @@
-/* A real one-page resume, drawn onto a canvas for the 3D scenes: Elon Musk's public record, set the way ApplyTwin
+/* A real one-page CV, drawn onto a canvas for the 3D scenes: Elon Musk's public record, set the way ApplyTwin
    renders a page. A tailored version reorders and rewrites lines for one company; the rewritten lines are tinted blue. */
 
 const ROLES = {
