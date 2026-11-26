@@ -1463,6 +1463,40 @@ _rl2 = render.render(_lr, 'latex', os.path.join(os.environ['APPLYTWIN_HOME'], 'l
 _tl2 = render.pdf_text(_rl2['pdf']) or ''
 res.append(ok(_rl2['pages'] == 1 and not _ats.text_layer_issues(_tl2) and 'Go, Kafka' in _tl2,
               f'latex with stacks and underlined links: 1 page, clean text layer {_ats.text_layer_issues(_tl2)}'))
+# the user's own Overleaf preamble: kept as is (theirs on top, A4, no tag line), the body in their macros, symbols readable
+_own = os.path.join(os.environ['APPLYTWIN_HOME'], 'own_main.tex')
+open(_own, 'w', encoding='utf-8').write(r"""\documentclass[11pt,letterpaper]{article}
+\usepackage[empty]{fullpage}\usepackage{enumitem}\usepackage[hidelinks]{hyperref}\usepackage{tabularx}
+\usepackage[T1]{fontenc}\usepackage{charter}\usepackage{titlesec}
+% OWN-TEMPLATE-MARK
+\newcommand{\resumeItem}[1]{\item\small{#1}}
+\begin{document}
+Old body that must not appear.
+\end{document}
+""")
+_or = copy.deepcopy(_ex); _or['paper'] = 'A4'
+_or['projects'][0] = {**_or['projects'][0], 'url': '', 'name': "Spread: Dispatch Bot ('Spread' challenge, Python)",
+                      'bullets': ["Turned a bot losing €72k/week into ~€11k/week profit at 12× speed, R² ≥ 0.9."]}
+_ot = _lx.build_tex(_or, template=_own)
+res.append(ok('OWN-TEMPLATE-MARK' in _ot and 'Old body' not in _ot and 'a4paper' in _ot and 'letterpaper' not in _ot
+              and r'\atsym{20AC}{\euro}' in _ot and r'\atProjectHeading{\textbf{Spread: Dispatch Bot} (`Spread' in _ot.replace('{}', '')
+              and r' $\cdot$ '.join(_lx.tex(h) for h in _or['basics']['headline']) not in _ot and _lx.build_tex(_or, template='').count('OWN-TEMPLATE-MARK') == 0,
+              'latex: your own preamble is kept, only the body is written, A4 for the UK, project name bold with its brackets plain'))
+_orp = os.path.join(os.environ['APPLYTWIN_HOME'], 'own.pdf')
+try:
+    _lx.compile_tex(_ot, _orp)
+    _otx = render.pdf_text(_orp) or ''
+except RuntimeError as _e:
+    _otx = f'compile failed: {_e}'
+res.append(ok(os.path.exists(_orp) and '12×' in _otx and '¿' not in _otx and 'Ö' not in _otx
+              and not _ats.text_layer_issues(_otx), f'latex: your own template compiles, x and euro no longer read as Ö and ¿ {_otx[:80]!r}'))
+# a template picked in the profile beats the field's default (a 'latex' choice used to come out 'classic')
+from applytwin import learn as _lrn
+_pt = store.profile()
+api.update_profile({**_pt, 'apply': {**_pt['apply'], 'template': 'latex'}})
+_bt = _lrn.best_template('software')
+api.update_profile(_pt)
+res.append(ok(_bt == 'latex' and _lrn.best_template('software') == 'classic', f'your profile template is used ({_bt})'))
 _css = render.CSS if hasattr(render, 'CSS') else open(os.path.join(ROOT, 'applytwin', 'render.py'), encoding='utf-8').read()
 res.append(ok('text-decoration: underline' in _css and 'text-underline-offset' in _css, 'html templates underline every link'))
 _pkg = json.dumps({'dependencies': {'react': '1', 'next': '1', 'clsx': '1', '@aws-sdk/client-s3': '1'}, 'devDependencies': {'vitest': '1'}})

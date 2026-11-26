@@ -24,7 +24,6 @@ SUPPORT = r"""\usepackage{textcomp}
 % a symbol drawn by TeX but read by a parser as its Unicode character (pdfLaTeX alone writes the euro sign as "C")
 \providecommand{\atsym}[2]{\BeginAccSupp{method=hex,unicode,ActualText=#1}#2\EndAccSupp{}}
 \providecommand{\atfs}{\ifdefined\pdffakespace\pdffakespace\fi}
-\ifdefined\pdfinterwordspaceon\pdfinterwordspaceon\fi  % pdfTeX: real space characters between words, so no parser glues "ms)by"
 % a project's name, its stack and its date: the name wraps onto a second line rather than running past the margin
 \providecommand{\atProjectHeading}[2]{\item
   \begin{tabularx}{0.97\textwidth}[t]{@{}>{\raggedright\arraybackslash}X@{\hspace{10pt}}r@{}}
@@ -64,6 +63,9 @@ PREAMBLE = r"""\documentclass[letterpaper,11pt]{article}
 \setlength{\tabcolsep}{0in}
 \titleformat{\section}{\vspace{-4pt}\scshape\raggedright\large}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
 \ifdefined\pdfgentounicode\pdfgentounicode=1\fi
+% pdfTeX: real space characters between words, so no parser glues "ms)by". Built-in only: in a user's preamble with icon
+% fonts the fake spaces were drawn from the wrong font and shifted the header
+\ifdefined\pdfinterwordspaceon\pdfinterwordspaceon\fi
 \newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
 \newcommand{\resumeSubheading}[4]{\vspace{-2pt}\item
   \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
@@ -97,7 +99,9 @@ FALLBACK_MACROS = r"""\makeatletter
 \providecommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
 """
 
-SPECIAL = {'&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#', '_': r'\_', '{': r'\{', '}': r'\}', '~': r'\textasciitilde{}',
+SPECIAL = {'&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#', '_': r'\_', '{': r'\{', '}': r'\}',
+           # '~2,000' means "about": a tilde on the line, not the raised accent \textasciitilde draws in Charter
+           '~': r'\atsym{007E}{\ensuremath{\sim}}',
            '^': r'\textasciicircum{}', '\\': r'\textbackslash{}',
            # characters pdfLaTeX can't set from UTF-8 (or sets from a font whose text layer reads wrong): drawn by TeX, read
            # by a parser as the real character ('€73.8k' came out as '¿73.8k', '12×' as '12Ö')
@@ -124,6 +128,7 @@ def esc(s):
     # gap ("PyT orch", "W orkshop", "A w ards"), so a keyword or a section heading went missing
     # (only on the plain text between escapes: a command such as \atsym{20AC} must come through untouched)
     def plain(t):
+        t = re.sub(r"(?<![\w.,)])'(?=\w)", '`', t)   # an opening quote ('Research to Trade') is `, else TeX sets ’
         return re.sub(r'([AFKLPTVWY])(?=[A-Za-z])', r'\1{}', re.sub(r'f(?=[fil])', 'f{}', t))
     out, run = [], []
     for c in s or '':
@@ -199,7 +204,7 @@ def _own_preamble(pre, k, a4):
     return pre
 
 
-ICONS = (('phone', 'phone'), ('email', 'envelope'), ('location', 'map-marker-alt'), ('status', 'passport'))
+ICONS = (('phone', 'phone'), ('email', 'envelope'), ('location', 'map-marker-alt'), ('status', None))
 
 
 def _link_icon(u):
@@ -218,7 +223,7 @@ def build_tex(r, k=1.0, template=None):
     b = r.get('basics', {})
 
     def item(kind, text):
-        return (r'\faIcon{%s} ' % kind if icons else '') + text
+        return (r'\mbox{\faIcon{%s}}\ ' % kind if icons and kind else '') + text
     contact = []
     for key, icon in ICONS:
         if b.get(key):
@@ -232,7 +237,8 @@ def build_tex(r, k=1.0, template=None):
     body = [r'\begin{center}', r'\textbf{\Huge \scshape %s} \\ \vspace{%s}' % (esc(b.get('name', '')), '8pt' if own else '1pt')]
     if b.get('headline') and not own:   # the user's own header has no tag line: theirs is name and contact only
         body.append(r'\small %s \\ \vspace{1pt}' % r' $\cdot$ '.join(tex(h) for h in b['headline']))
-    body += [('' if own else r'\small ') + r' $|$ '.join(contact), r'\end{center}']
+    # the user's header is normal size for a few items; more than three set small, so the line doesn't wrap
+    body += [('' if own and len(contact) <= 3 else r'\small ') + r' $|$ '.join(contact), r'\end{center}']
     for sec in r.get('order') or []:
         data = r.get(sec)
         if not data:
@@ -310,9 +316,11 @@ def build_tex(r, k=1.0, template=None):
     doc = '\n'.join(body)
     # pdfTeX drops the word space next to a boxed underline from the text layer ("prototypeand"): put a real space
     # character back on each side of a link that sits between words
-    lk = r'\\href\{[^{}]*\}\{\\lk\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}\}'
-    doc = re.sub(r'(?<= )(' + lk + ')', r'\\atfs{}\1', doc)
-    doc = re.sub('(' + lk + r')(?= )', r'\1\\atfs{}', doc)
+    # (only for the built-in underline: the user's plain links need no help, and there the fake space shifted the text)
+    if not own:
+        lk = r'\\href\{[^{}]*\}\{\\lk\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}\}'
+        doc = re.sub(r'(?<= )(' + lk + ')', r'\\atfs{}\1', doc)
+        doc = re.sub('(' + lk + r')(?= )', r'\1\\atfs{}', doc)
     return pre + '\n\\begin{document}\n' + doc + '\n\\end{document}\n'
 
 
